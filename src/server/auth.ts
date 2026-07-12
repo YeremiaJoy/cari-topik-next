@@ -1,6 +1,7 @@
-import { supabaseServer } from './supabase'
+import { cookies } from 'next/headers'
 import { toUser } from './mappers'
-import { assertActiveProfile, syncAuthProfile } from './db/operations'
+import { assertActiveProfile, getProfileById } from './db/operations'
+import { SESSION_COOKIE, verifySession } from './session'
 import { HttpError } from './httpError'
 import type { User } from '../services/types'
 
@@ -10,27 +11,14 @@ export interface AuthedContext {
   user: User
 }
 
-/** Ambil sesi Supabase Auth, lalu sinkronkan profil aplikasi di Neon. */
+/** Baca sesi aplikasi dari cookie, verifikasi, lalu muat profil dari Neon. */
 export async function requireUser(): Promise<AuthedContext> {
-  const supabase = await supabaseServer()
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
-  if (!authUser) throw new HttpError(401, 'not_authenticated', 'Harus login.')
+  const token = (await cookies()).get(SESSION_COOKIE)?.value
+  const session = token ? await verifySession(token) : null
+  if (!session) throw new HttpError(401, 'not_authenticated', 'Harus login.')
 
-  const meta = authUser.user_metadata ?? {}
-  const name =
-    typeof meta.full_name === 'string'
-      ? meta.full_name
-      : typeof meta.name === 'string'
-        ? meta.name
-        : (authUser.email?.split('@')[0] ?? '')
-  const avatarUrl = typeof meta.avatar_url === 'string' ? meta.avatar_url : ''
-  const email = authUser.email ?? ''
-
-  const providerName =
-    typeof authUser.app_metadata?.provider === 'string' ? authUser.app_metadata.provider : 'google'
-  const profile = await syncAuthProfile({ id: authUser.id, name, email, avatarUrl, providerName })
+  const profile = await getProfileById(session.uid)
+  if (!profile) throw new HttpError(401, 'not_authenticated', 'Profil tidak ditemukan.')
   assertActiveProfile(profile)
   return { user: toUser(profile) }
 }

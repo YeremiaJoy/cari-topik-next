@@ -1,6 +1,5 @@
 import type { AuthService, User } from '../types'
 import { api, ApiError } from './client'
-import { supabaseBrowser } from '../../lib/supabase/browser'
 
 export function createHttpAuthService(): AuthService {
   return {
@@ -12,29 +11,20 @@ export function createHttpAuthService(): AuthService {
         throw err
       }
     },
-    async loginWithGoogle() {
-      const supabase = supabaseBrowser()
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=/room` },
+    async loginWithGoogle(accessToken: string) {
+      return api<User>('/api/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ accessToken }),
       })
-
-      // add provider (google) to provider tbale
-      // assign user role to user_role table
-      
-      if (error) throw error
-      // Browser sedang redirect ke Google; promise ini sengaja tidak pernah selesai.
-      return new Promise<User>(() => {})
     },
     async logout() {
-      await supabaseBrowser().auth.signOut()
+      await api<void>('/api/auth/logout', { method: 'POST' })
     },
     async upgradeToPro() {
       return api<User>('/api/me/upgrade', { method: 'POST' })
     },
     async deleteAccount() {
       await api<void>('/api/me', { method: 'DELETE' })
-      await supabaseBrowser().auth.signOut()
     },
   }
 }

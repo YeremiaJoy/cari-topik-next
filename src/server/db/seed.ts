@@ -24,12 +24,7 @@ async function main() {
   const connectionString = process.env.DATABASE_MIGRATION_URL ?? process.env.DATABASE_URL
   if (!connectionString) throw new Error('DATABASE_URL is not set')
 
-  const seedPath = path.join(
-    process.cwd(),
-    'supabase',
-    'migrations',
-    '20260712000002_seed_questions.sql',
-  )
+  const seedPath = path.join(process.cwd(), 'drizzle', 'seed', 'questions.sql')
   const questionSeedSql = (await readFile(seedPath, 'utf8'))
     .replace('insert into public.questions', 'insert into seed_questions')
     .replace(

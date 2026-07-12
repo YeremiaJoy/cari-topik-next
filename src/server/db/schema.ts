@@ -92,14 +92,21 @@ export const questionCategories = pgTable("question_category", {
   ...timestamps,
 });
 
-export const users = pgTable("user", {
-  id: uuid("id").primaryKey(),
-  name: text("name").notNull().default(""),
-  email: text("email").notNull(),
-  avatar_url: text("avatar_url").notNull().default(""),
-  status: userStatusEnum("status").notNull().default("ACTIVE"),
-  ...timestamps,
-});
+export const users = pgTable(
+  "user",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull().default(""),
+    email: text("email").notNull(),
+    avatar_url: text("avatar_url").notNull().default(""),
+    google_sub: varchar("google_sub", { length: 64 }),
+    status: userStatusEnum("status").notNull().default("ACTIVE"),
+    ...timestamps,
+  },
+  (table) => ({
+    googleSubUnique: uniqueIndex("user_google_sub_unique").on(table.google_sub),
+  }),
+);
 
 export const providers = pgTable(
   "provider",

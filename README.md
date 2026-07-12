@@ -1,15 +1,18 @@
 # CariTopik (Next.js)
 
 Migrasi `cari-topik-frontend` (Vite SPA) ke Next.js App Router. Semua logika
-bisnis kini lewat **API routes** (`src/app/api/*`); klien tidak lagi query
-Supabase langsung — hanya alur auth (OAuth Google) yang memakai klien browser.
+bisnis kini lewat **API routes** (`src/app/api/*`). Data sepenuhnya di Neon;
+auth memakai Google sign-in (`@react-oauth/google`) + sesi milik aplikasi.
 
 ## Arsitektur
 
-- **Auth** — Supabase Auth (Google, PKCE) via `@supabase/ssr`; sesi disimpan di
-  cookie, di-refresh proxy (`src/proxy.ts`), ditukar di
-  `/auth/callback`. API route membaca sesi dari cookie per-request
-  (`src/server/supabase.ts`) lalu sinkron profil aplikasi ke Neon.
+- **Auth** — Google sign-in di browser via `@react-oauth/google`
+  (`useGoogleLogin`, implicit flow → access token). `POST /api/auth/google`
+  memverifikasi token ke endpoint userinfo Google, sinkron profil ke Neon
+  (`syncAuthProfile`, cocokkan `google_sub` lalu email), lalu menandatangani
+  JWT sesi (`jose`) dan menaruhnya di cookie httpOnly. `requireUser`
+  (`src/server/auth.ts`) memverifikasi cookie tiap request; `POST /api/auth/logout`
+  menghapusnya. Tidak ada middleware/proxy — API route menjaga aksesnya sendiri.
 - **API routes** — kontrak di `docs/API_SPEC.md` repo lama, base `/api`:
   - `GET/DELETE /api/me`, `POST /api/me/upgrade`
   - `GET/POST /api/rooms`, `GET/DELETE /api/rooms/:id`,
@@ -22,23 +25,25 @@ Supabase langsung — hanya alur auth (OAuth Google) yang memakai klien browser.
 - **Klien** — `src/services/http/*` mengimplementasikan interface lama
   (`AuthService`, `RoomService`, `AdminService`, config store); halaman tidak berubah
   kontraknya. Paywall 402 dipetakan kembali ke `PaywallError`.
-- **DB** — data aplikasi memakai Neon Postgres + Drizzle ORM. Supabase hanya
-  dipakai untuk auth. Schema Drizzle ada di `src/server/db/schema.ts`; migration
-  keluar ke folder `drizzle/`; seed bank pertanyaan memakai SQL seed lama.
+- **DB** — data aplikasi memakai Neon Postgres + Drizzle ORM. Schema Drizzle
+  ada di `src/server/db/schema.ts`; migration keluar ke folder `drizzle/`; seed
+  bank pertanyaan dari `drizzle/seed/questions.sql`.
 
 ## Setup
 
 ```bash
 npm install
-cp .env.example .env.local   # isi DATABASE_URL + Supabase Auth keys
+cp .env.example .env.local   # isi DATABASE_URL, NEXT_PUBLIC_GOOGLE_CLIENT_ID, SESSION_SECRET
 npm run db:generate
 npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-Redirect URL OAuth di Supabase perlu ditambah: `http://localhost:3000/auth/callback`
-(dan domain produksi `/auth/callback`).
+`SESSION_SECRET` — buat dengan
+`node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`.
+Di Google Cloud Console, tambahkan origin JavaScript resmi (mis.
+`http://localhost:3000`) pada OAuth Client ID; implicit flow tidak butuh redirect URI.
 
 ## Catatan migrasi
 

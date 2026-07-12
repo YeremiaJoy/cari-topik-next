@@ -82,6 +82,10 @@ export interface AppConfig {
   freeMaxRooms: number
   proPrice: number
   proPriceAfterDiscount: number
+  maintenance?: {
+    enabled: boolean
+    message: Localized
+  }
 }
 
 export const DEFAULT_APP_CONFIG: AppConfig = {

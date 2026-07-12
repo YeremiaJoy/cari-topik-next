@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/server/auth'
-import { withErrors } from '@/server/handler'
+import { withAdmin } from '@/server/handler'
 import { fetchProfiles, fetchQuestions, fetchRoomStats } from '@/server/adminData'
 import type { AdminStats } from '@/services/types'
 
 export async function GET() {
-  return withErrors(async () => {
-    const { supabase } = await requireAdmin()
+  return withAdmin(async () => {
     const [users, rooms, questions] = await Promise.all([
-      fetchProfiles(supabase),
-      fetchRoomStats(supabase),
-      fetchQuestions(supabase),
+      fetchProfiles(),
+      fetchRoomStats(),
+      fetchQuestions(),
     ])
     const stats: AdminStats = {
       totalUsers: users.length,

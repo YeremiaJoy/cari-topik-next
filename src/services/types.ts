@@ -148,15 +148,10 @@ export interface AdminService {
  * Akun simulasi untuk pemilih akun Google di login mock.
  * Role ditentukan backend; di mock, akun membawa role seolah dari respons API.
  */
-export interface MockAccount {
-  name: string
-  email: string
-  role: Role
-}
-
 export interface AuthService {
   getCurrentUser(): Promise<User | null>
-  loginWithGoogle(account?: MockAccount): Promise<User>
+  /** Tukar access token Google (implicit flow) menjadi sesi + profil user. */
+  loginWithGoogle(accessToken: string): Promise<User>
   logout(): Promise<void>
   upgradeToPro(): Promise<User>
   /** Hapus akun beserta seluruh data miliknya (room, favorit). */

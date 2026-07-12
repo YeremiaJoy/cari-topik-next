@@ -219,67 +219,95 @@ async function getRoomRow(client: SelectClient, userId: string, roomId: string):
   return (row ?? null) as RoomRow | null
 }
 
+const GOOGLE_PROVIDER = 'google'
+
 export async function syncAuthProfile(input: {
-  id: string
+  sub: string
   name: string
   email: string
   avatarUrl: string
-  providerName: string
 }): Promise<ProfileRow> {
-  requireUuid(input.id)
-
   return await getDb().transaction(async (tx) => {
-    const [existing] = await tx.select().from(users).where(eq(users.id, input.id)).limit(1)
+    // Resolusi baris user: cocokkan google_sub, lalu email (backfill), else buat baru.
+    let [existing] = await tx.select().from(users).where(eq(users.google_sub, input.sub)).limit(1)
     if (!existing) {
-      await tx.insert(users).values({
-        id: input.id,
-        name: input.name,
-        email: input.email,
-        avatar_url: input.avatarUrl,
-        status: 'ACTIVE',
-      })
-      await tx.insert(userLogs).values({ user_id: input.id, status: 'ACTIVE' })
-    } else if (existing.status === 'ACTIVE') {
-      await tx
-        .update(users)
-        .set({
+      const [byEmail] = await tx
+        .select()
+        .from(users)
+        .where(and(eq(users.email, input.email), isNull(users.deleted_at)))
+        .limit(1)
+      if (byEmail) {
+        await tx
+          .update(users)
+          .set({ google_sub: input.sub, updated_at: sql`now()` })
+          .where(eq(users.id, byEmail.id))
+        existing = { ...byEmail, google_sub: input.sub }
+      }
+    }
+
+    let userId: string
+    if (!existing) {
+      const [created] = await tx
+        .insert(users)
+        .values({
           name: input.name,
           email: input.email,
           avatar_url: input.avatarUrl,
-          updated_at: sql`now()`,
+          google_sub: input.sub,
+          status: 'ACTIVE',
         })
-        .where(eq(users.id, input.id))
+        .returning({ id: users.id })
+      userId = created.id
+      await tx.insert(userLogs).values({ user_id: userId, status: 'ACTIVE' })
+    } else {
+      userId = existing.id
+      if (existing.status === 'ACTIVE') {
+        await tx
+          .update(users)
+          .set({
+            name: input.name,
+            email: input.email,
+            avatar_url: input.avatarUrl,
+            updated_at: sql`now()`,
+          })
+          .where(eq(users.id, userId))
+      }
     }
 
-    const viewBeforeDefaults = await getProfileView(tx, input.id)
+    const viewBeforeDefaults = await getProfileView(tx, userId)
     if (!viewBeforeDefaults) throw new HttpError(401, 'not_authenticated', 'Profil tidak ditemukan.')
     if (!isAccountActive(viewBeforeDefaults.status ?? 'ACTIVE')) return viewBeforeDefaults
 
     const [provider] = await tx
       .select()
       .from(providers)
-      .where(and(eq(providers.user_id, input.id), eq(providers.provider_name, input.providerName), isNull(providers.deleted_at)))
+      .where(and(eq(providers.user_id, userId), eq(providers.provider_name, GOOGLE_PROVIDER), isNull(providers.deleted_at)))
       .limit(1)
     if (provider) {
       await tx.update(providers).set({ updated_at: sql`now()` }).where(eq(providers.id, provider.id))
     } else {
-      await tx.insert(providers).values({ user_id: input.id, provider_name: input.providerName })
+      await tx.insert(providers).values({ user_id: userId, provider_name: GOOGLE_PROVIDER })
     }
 
-    const planRows = await getCurrentPlanRows(tx, input.id)
+    const planRows = await getCurrentPlanRows(tx, userId)
     if (!planRows.some((row) => !row.ended_at && !row.deleted_at)) {
-      await tx.insert(userPlans).values({ user_id: input.id, plan_id: await getPlanIdByName(tx, 'free') })
+      await tx.insert(userPlans).values({ user_id: userId, plan_id: await getPlanIdByName(tx, 'free') })
     }
 
-    const roleRows = await getActiveRoleRows(tx, input.id)
+    const roleRows = await getActiveRoleRows(tx, userId)
     if (!roleRows.some((row) => !row.deleted_at)) {
-      await tx.insert(userRoles).values({ user_id: input.id, role_id: await getRoleIdByName(tx, 'guest') })
+      await tx.insert(userRoles).values({ user_id: userId, role_id: await getRoleIdByName(tx, 'guest') })
     }
 
-    const view = await getProfileView(tx, input.id)
+    const view = await getProfileView(tx, userId)
     if (!view) throw new HttpError(401, 'not_authenticated', 'Profil tidak ditemukan.')
     return view
   })
+}
+
+export async function getProfileById(userId: string): Promise<ProfileRow | null> {
+  if (!UUID_RE.test(userId)) return null
+  return getProfileView(getDb(), userId)
 }
 
 export function assertActiveProfile(profile: ProfileRow) {
@@ -692,6 +720,7 @@ export async function finalizeSoftDeleteUser(userId: string) {
         name: '',
         email: `deleted-${userId}@deleted.local`,
         avatar_url: '',
+        google_sub: null,
         status: deletionStatusSequence[1],
         updated_at: sql`now()`,
         deleted_at: sql`now()`,

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, useReducedMotion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
+import { useGoogleLogin } from '@react-oauth/google'
 import { useAuth } from '../context/AuthContext'
 
 function GoogleIcon() {
@@ -42,17 +43,27 @@ export default function LoginPage() {
     if (user && !busy) router.replace('/room')
   }, [user, busy, router])
 
-  const handleLogin = async () => {
-    setBusy(true)
-    setError(false)
-    try {
-      // Redirect ke Google; halaman ini ditinggalkan sebelum promise selesai.
-      await login()
-      router.replace('/room')
-    } catch {
+  const googleLogin = useGoogleLogin({
+    flow: 'implicit',
+    onSuccess: async (tokenResponse) => {
+      try {
+        await login(tokenResponse.access_token)
+        router.replace('/room')
+      } catch {
+        setError(true)
+        setBusy(false)
+      }
+    },
+    onError: () => {
       setError(true)
       setBusy(false)
-    }
+    },
+  })
+
+  const handleLogin = () => {
+    setBusy(true)
+    setError(false)
+    googleLogin()
   }
 
   return (

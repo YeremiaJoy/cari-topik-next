@@ -8,7 +8,7 @@ import { authService } from '../services'
 interface AuthValue {
   user: User | null
   loading: boolean
-  login: () => Promise<void>
+  login: (accessToken: string) => Promise<void>
   logout: () => Promise<void>
   upgrade: () => Promise<void>
   deleteAccount: () => Promise<void>
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthValue = {
     user,
     loading,
-    login: async () => setUser(await authService.loginWithGoogle()),
+    login: async (accessToken: string) => setUser(await authService.loginWithGoogle(accessToken)),
     logout: async () => {
       await authService.logout()
       setUser(null)

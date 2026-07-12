@@ -4,7 +4,6 @@ import { withAdmin } from '@/server/handler'
 import { jsonError } from '@/server/errors'
 import { toUser } from '@/server/mappers'
 import { finalizeSoftDeleteUser, markUserDeletionProcessing, setUserPlan } from '@/server/db/operations'
-import { deleteAuthUser } from '@/server/supabaseAdmin'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -28,7 +27,6 @@ export async function DELETE(_request: Request, { params }: Params) {
       throw new HttpError(409, 'cannot_delete_self', 'Tidak bisa menghapus akun sendiri dari sini.')
     }
     await markUserDeletionProcessing(id)
-    await deleteAuthUser(id)
     await finalizeSoftDeleteUser(id)
     return new NextResponse(null, { status: 204 })
   })

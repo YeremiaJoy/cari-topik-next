@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <!-- Kartu belakang -->
+  <rect x="7" y="7" width="24" height="34" rx="6" fill="#f9e39a" transform="rotate(-10 19 24)"/>
+  <!-- Kartu depan -->
+  <rect x="17" y="7" width="24" height="34" rx="6" fill="#ee5f2c" transform="rotate(7 29 24)"/>
+  <!-- Hati di kartu depan -->
+  <path transform="translate(22.5 18.5) rotate(7)" fill="#fdf8ec"
+    d="M0 4 C0 1.8 1.8 0 4 0 C5.5 0 6.7 0.8 7.5 2 C8.3 0.8 9.5 0 11 0 C13.2 0 15 1.8 15 4 C15 8 7.5 13 7.5 13 C7.5 13 0 8 0 4 Z"/>
+</svg>

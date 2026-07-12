@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@theme {
+  /* Krem hangat — sedikit lebih cerah dari sebelumnya */
+  --color-cream-50: #fdf8ec;
+  --color-cream-100: #f8eed7;
+  --color-cream-200: #efdfba;
+
+  /* Aksen tunggal: coral senja, lebih berani */
+  --color-terracotta-100: #ffe4d3;
+  --color-terracotta-200: #ffcfb3;
+  --color-terracotta-400: #f47c4e;
+  --color-terracotta-500: #ee5f2c;
+  --color-terracotta-600: #d64a1e;
+  --color-terracotta-700: #a93a1a;
+
+  /* Tint permukaan (bukan aksen) untuk punggung kartu & sorotan */
+  --color-butter-100: #fdf1c7;
+  --color-butter-200: #f9e39a;
+
+  /* Tinta espresso — lebih pekat untuk kontras */
+  --color-cocoa-500: #8a6650;
+  --color-cocoa-700: #503726;
+  --color-cocoa-900: #241509;
+
+  /* Font dimuat via next/font (lihat app/layout.tsx) */
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-body: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  /* Bayangan hangat — ikut rona latar, bukan hitam murni */
+  --shadow-warm-sm: 0 1px 2px rgba(80, 40, 15, 0.08), 0 2px 8px rgba(80, 40, 15, 0.06);
+  --shadow-warm-md: 0 2px 4px rgba(80, 40, 15, 0.08), 0 8px 24px rgba(80, 40, 15, 0.1);
+  --shadow-warm-lg: 0 4px 8px rgba(80, 40, 15, 0.08), 0 16px 48px rgba(80, 40, 15, 0.14);
+
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-cream-50 text-cocoa-900 font-body antialiased;
+  background-image:
+    radial-gradient(60rem 40rem at 85% -10%, rgba(238, 95, 44, 0.07), transparent 60%),
+    radial-gradient(50rem 35rem at -10% 30%, rgba(249, 227, 154, 0.25), transparent 55%);
+  background-attachment: fixed;
+}
+
+/* Butir halus di atas segalanya — memecah kesan datar digital */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--color-terracotta-200);
+  color: var(--color-cocoa-900);
+}
+
+/* Focus ring konsisten & terlihat untuk semua elemen interaktif */
+a:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible {
+  outline: 2px solid var(--color-terracotta-600);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+/* Judul display: rapat, berat, seimbang */
+.display-tight {
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+/* Tombol terasa fisik saat ditekan */
+.press {
+  transition: transform 150ms var(--ease-spring), background-color 200ms ease, box-shadow 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Ambang mengambang pelan untuk elemen dekoratif */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(var(--float-rotate, 0deg)); }
+  50% { transform: translateY(-8px) rotate(var(--float-rotate, 0deg)); }
+}
+.float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .float-slow { animation: none; }
+  .press, .press:active { transition: none; transform: none; }
+}

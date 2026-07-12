@@ -1,0 +1,34 @@
+{
+  "name": "cari-topik-next",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:link": "supabase link --project-ref guyyxrlgkqspiackvdsp",
+    "db:push": "supabase db push"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.110.2",
+    "i18next": "^24.2.3",
+    "motion": "^12.42.2",
+    "next": "^15.5.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-i18next": "^15.7.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.2",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "supabase": "^2.109.1",
+    "tailwindcss": "^4.3.2",
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.9"
+  }
+}

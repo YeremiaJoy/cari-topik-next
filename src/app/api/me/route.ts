@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { requireUser } from '@/server/auth'
 import { withErrors } from '@/server/handler'
+import { finalizeSoftDeleteUser, markUserDeletionProcessing } from '@/server/db/operations'
+import { deleteAuthUser } from '@/server/supabaseAdmin'
 
 export async function GET() {
   return withErrors(async () => {
@@ -11,10 +13,10 @@ export async function GET() {
 
 export async function DELETE() {
   return withErrors(async () => {
-    const { supabase } = await requireUser()
-    const { error } = await supabase.rpc('delete_account')
-    if (error) throw error
-    await supabase.auth.signOut()
+    const { user } = await requireUser()
+    await markUserDeletionProcessing(user.id)
+    await deleteAuthUser(user.id)
+    await finalizeSoftDeleteUser(user.id)
     return new NextResponse(null, { status: 204 })
   })
 }

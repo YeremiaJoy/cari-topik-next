@@ -2,9 +2,8 @@ import { NextResponse } from 'next/server'
 import { requireUser } from '@/server/auth'
 import { withErrors } from '@/server/handler'
 import { jsonError } from '@/server/errors'
-import { toQuestion, toRoom } from '@/server/mappers'
-import type { QuestionRow, RoomRow } from '@/server/mappers'
-import { buildDeck } from '@/lib/deck'
+import { toRoom } from '@/server/mappers'
+import { createRoomForUser, listRoomsForUser } from '@/server/db/operations'
 import type { Category, Personality } from '@/services/types'
 
 const CATEGORIES: Category[] = ['pasangan', 'teman', 'keluarga']
@@ -12,13 +11,8 @@ const PERSONALITIES: Personality[] = ['introvert', 'extrovert']
 
 export async function GET() {
   return withErrors(async () => {
-    const { supabase } = await requireUser()
-    const { data, error } = await supabase
-      .from('rooms')
-      .select('*')
-      .order('created_at', { ascending: false })
-    if (error) throw error
-    return NextResponse.json(((data ?? []) as RoomRow[]).map(toRoom))
+    const { user } = await requireUser()
+    return NextResponse.json((await listRoomsForUser(user.id)).map(toRoom))
   })
 }
 
@@ -28,7 +22,7 @@ export async function GET() {
  */
 export async function POST(request: Request) {
   return withErrors(async () => {
-    const { supabase } = await requireUser()
+    const { user } = await requireUser()
     const body = await request.json().catch(() => null)
     const participantCount = Number(body?.participantCount)
     const category = body?.category as Category
@@ -49,21 +43,7 @@ export async function POST(request: Request) {
       if (!valid) return jsonError(400, 'validation_error', 'personalities tidak valid.')
     }
 
-    const { data: bankRows, error: bankError } = await supabase.from('questions').select('*')
-    if (bankError) throw bankError
-    const bank = ((bankRows ?? []) as QuestionRow[]).map(toQuestion)
-    const deck = buildDeck(bank, { participantCount, category, personalities }).map((q) => q.id)
-    if (deck.length === 0) {
-      return jsonError(400, 'validation_error', 'Tidak ada kartu untuk kombinasi ini.')
-    }
-
-    const { data, error } = await supabase.rpc('create_room', {
-      p_participant_count: participantCount,
-      p_category: category,
-      p_personalities: personalities ?? null,
-      p_deck: deck,
-    })
-    if (error) throw error
-    return NextResponse.json(toRoom(data as RoomRow), { status: 201 })
+    const room = await createRoomForUser(user, { participantCount, category, personalities })
+    return NextResponse.json(toRoom(room), { status: 201 })
   })
 }

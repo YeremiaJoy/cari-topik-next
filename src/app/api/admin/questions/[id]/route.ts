@@ -2,16 +2,16 @@ import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/server/auth'
 import { withErrors } from '@/server/handler'
 import { toQuestion } from '@/server/mappers'
-import type { QuestionRow } from '@/server/mappers'
+import { deleteQuestionRow, updateQuestionRow } from '@/server/db/operations'
 
 type Params = { params: Promise<{ id: string }> }
 
 export async function PATCH(request: Request, { params }: Params) {
   return withErrors(async () => {
-    const { supabase } = await requireAdmin()
+    await requireAdmin()
     const { id } = await params
     const patch = (await request.json().catch(() => null)) ?? {}
-    const row: Record<string, unknown> = {}
+    const row: Parameters<typeof updateQuestionRow>[1] = {}
     if (patch.text !== undefined) {
       row.text_id = patch.text.id
       row.text_en = patch.text.en
@@ -20,23 +20,15 @@ export async function PATCH(request: Request, { params }: Params) {
     if (patch.depth !== undefined) row.depth = patch.depth
     if (patch.bias !== undefined) row.bias = patch.bias
     if (patch.forGroup !== undefined) row.for_group = Boolean(patch.forGroup)
-    const { data, error } = await supabase
-      .from('questions')
-      .update(row)
-      .eq('id', id)
-      .select()
-      .single()
-    if (error) throw error
-    return NextResponse.json(toQuestion(data as QuestionRow))
+    return NextResponse.json(toQuestion(await updateQuestionRow(id, row)))
   })
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
   return withErrors(async () => {
-    const { supabase } = await requireAdmin()
+    await requireAdmin()
     const { id } = await params
-    const { error } = await supabase.from('questions').delete().eq('id', id)
-    if (error) throw error
+    await deleteQuestionRow(id)
     return new NextResponse(null, { status: 204 })
   })
 }

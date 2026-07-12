@@ -9,7 +9,7 @@ Supabase langsung — hanya alur auth (OAuth Google) yang memakai klien browser.
 - **Auth** — Supabase Auth (Google, PKCE) via `@supabase/ssr`; sesi disimpan di
   cookie, di-refresh middleware (`src/middleware.ts`), ditukar di
   `/auth/callback`. API route membaca sesi dari cookie per-request
-  (`src/server/supabase.ts`).
+  (`src/server/supabase.ts`) lalu sinkron profil aplikasi ke Neon.
 - **API routes** — kontrak di `docs/API_SPEC.md` repo lama, base `/api`:
   - `GET/DELETE /api/me`, `POST /api/me/upgrade`
   - `GET/POST /api/rooms`, `GET/DELETE /api/rooms/:id`,
@@ -18,19 +18,23 @@ Supabase langsung — hanya alur auth (OAuth Google) yang memakai klien browser.
   - `GET /api/admin/{stats,analytics,users,questions,config,announcement}` + mutasinya
   - Error: `{ statusCode, code, message, resetAt? }`; kuota → **402** `paywall:*`.
 - **Komposisi deck** pindah ke server (`POST /api/rooms` → `src/lib/deck.ts`);
-  kuota free tetap ditegakkan RPC Postgres (SECURITY DEFINER) seperti sebelumnya.
+  kuota free ditegakkan transaksi Drizzle di API route.
 - **Klien** — `src/services/http/*` mengimplementasikan interface lama
   (`AuthService`, `RoomService`, `AdminService`, config store); halaman tidak berubah
   kontraknya. Paywall 402 dipetakan kembali ke `PaywallError`.
-- **DB** — folder `supabase/` (schema, seed, RPC) disalin apa adanya; project
-  Supabase yang sama tetap dipakai (`yarn db:link && yarn db:push`).
+- **DB** — data aplikasi memakai Neon Postgres + Drizzle ORM. Supabase hanya
+  dipakai untuk auth. Schema Drizzle ada di `src/server/db/schema.ts`; migration
+  keluar ke folder `drizzle/`; seed bank pertanyaan memakai SQL seed lama.
 
 ## Setup
 
 ```bash
-yarn
-cp .env.example .env.local   # isi URL + publishable key Supabase
-yarn dev
+npm install
+cp .env.example .env.local   # isi DATABASE_URL + Supabase Auth keys
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+npm run dev
 ```
 
 Redirect URL OAuth di Supabase perlu ditambah: `http://localhost:3000/auth/callback`
@@ -48,8 +52,9 @@ Redirect URL OAuth di Supabase perlu ditambah: `http://localhost:3000/auth/callb
 
 ## Skrip
 
-- `yarn dev` / `yarn build` / `yarn start`
-- `yarn test` — vitest (deck, countdown, storage, installGate, kamus i18n)
-- `yarn typecheck`
+- `npm run dev` / `npm run build` / `npm run start`
+- `npm run test` — vitest (deck, countdown, storage, installGate, kamus i18n)
+- `npm run typecheck`
+- `npm run db:generate` / `npm run db:migrate` / `npm run db:seed`
 # cari-topik-next
 # cari-topik-next

@@ -6,11 +6,11 @@ import type { AdminStats } from '@/services/types'
 
 export async function GET() {
   return withErrors(async () => {
-    const { supabase } = await requireAdmin()
+    await requireAdmin()
     const [users, rooms, questions] = await Promise.all([
-      fetchProfiles(supabase),
-      fetchRoomStats(supabase),
-      fetchQuestions(supabase),
+      fetchProfiles(),
+      fetchRoomStats(),
+      fetchQuestions(),
     ])
     const stats: AdminStats = {
       totalUsers: users.length,

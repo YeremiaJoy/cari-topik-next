@@ -6,7 +6,7 @@ import { toUser } from '@/server/mappers'
 
 export async function GET() {
   return withErrors(async () => {
-    const { supabase } = await requireAdmin()
-    return NextResponse.json((await fetchProfiles(supabase)).map(toUser))
+    await requireAdmin()
+    return NextResponse.json((await fetchProfiles()).map(toUser))
   })
 }

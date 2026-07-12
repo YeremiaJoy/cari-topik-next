@@ -11,6 +11,7 @@ import type {
   Room,
   User,
 } from '../services/types'
+import type { UserStatus } from './db/status'
 
 export interface ProfileRow {
   id: string
@@ -19,6 +20,7 @@ export interface ProfileRow {
   avatar_url: string
   plan: Plan
   role: Role
+  status?: UserStatus
   created_at: string
 }
 
@@ -40,6 +42,7 @@ export interface RoomRow {
 
 export interface QuestionRow {
   id: string
+  question_code: string
   text_id: string
   text_en: string
   category: Category
@@ -54,6 +57,17 @@ export interface AppConfigRow {
   free_max_rooms: number
   pro_price: number
   pro_price_after_discount: number
+  maintenance_enabled?: boolean
+  maintenance_message_id?: string
+  maintenance_message_en?: string
+}
+
+export interface PlanBenefitRow {
+  max_room: number
+  mode: string
+  question_per_session: number
+  personalized_deck: boolean
+  offline_support: boolean
 }
 
 export interface AnnouncementRow {
@@ -111,6 +125,13 @@ export function toAppConfig(row: AppConfigRow): AppConfig {
     freeMaxRooms: row.free_max_rooms,
     proPrice: row.pro_price,
     proPriceAfterDiscount: row.pro_price_after_discount,
+    maintenance: {
+      enabled: Boolean(row.maintenance_enabled),
+      message: {
+        id: row.maintenance_message_id ?? '',
+        en: row.maintenance_message_en ?? '',
+      },
+    },
   }
 }
 

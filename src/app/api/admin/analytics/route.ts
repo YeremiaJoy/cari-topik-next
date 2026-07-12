@@ -32,11 +32,11 @@ const weeklyBuckets = (times: number[], weeks: number): WeeklyCount[] => {
 
 export async function GET() {
   return withErrors(async () => {
-    const { supabase } = await requireAdmin()
+    await requireAdmin()
     const [users, rooms, bank] = await Promise.all([
-      fetchProfiles(supabase),
-      fetchRoomStats(supabase),
-      fetchQuestions(supabase),
+      fetchProfiles(),
+      fetchRoomStats(),
+      fetchQuestions(),
     ])
     const categories: Category[] = ['pasangan', 'teman', 'keluarga']
     const depths: Depth[] = ['ringan', 'sedang', 'dalam']

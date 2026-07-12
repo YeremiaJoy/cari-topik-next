@@ -20,9 +20,6 @@ export function createHttpAuthService(): AuthService {
     async logout() {
       await api<void>('/api/auth/logout', { method: 'POST' })
     },
-    async upgradeToPro() {
-      return api<User>('/api/me/upgrade', { method: 'POST' })
-    },
     async deleteAccount() {
       await api<void>('/api/me', { method: 'DELETE' })
     },

@@ -10,7 +10,8 @@ interface AuthValue {
   loading: boolean
   login: (accessToken: string) => Promise<void>
   logout: () => Promise<void>
-  upgrade: () => Promise<void>
+  /** Refetch user (mis. setelah webhook pembayaran diharapkan sudah selesai). */
+  refreshUser: () => Promise<void>
   deleteAccount: () => Promise<void>
 }
 
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authService.logout()
       setUser(null)
     },
-    upgrade: async () => setUser(await authService.upgradeToPro()),
+    refreshUser: async () => setUser(await authService.getCurrentUser()),
     deleteAccount: async () => {
       await authService.deleteAccount()
       setUser(null)

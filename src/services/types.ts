@@ -153,9 +153,19 @@ export interface AuthService {
   /** Tukar access token Google (implicit flow) menjadi sesi + profil user. */
   loginWithGoogle(accessToken: string): Promise<User>
   logout(): Promise<void>
-  upgradeToPro(): Promise<User>
   /** Hapus akun beserta seluruh data miliknya (room, favorit). */
   deleteAccount(): Promise<void>
+}
+
+export interface SnapCharge {
+  token: string
+  redirectUrl: string
+  referenceId: string
+}
+
+export interface PaymentService {
+  /** Mulai pembelian plan; hasilnya dipakai untuk window.snap.pay(token). */
+  createCharge(plan: Plan): Promise<SnapCharge>
 }
 
 export interface RoomService {

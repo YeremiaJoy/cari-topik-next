@@ -2,6 +2,7 @@ import { createHttpAuthService } from './http/authService'
 import { createHttpRoomService } from './http/roomService'
 import { createHttpAdminService } from './http/adminService'
 import { createHttpConfigStore } from './http/configStore'
+import { createHttpPaymentService } from './http/paymentService'
 import { createQuestionCache } from './http/questionCache'
 import { buildDeck } from '../lib/deck'
 import type { QuestionService } from './types'
@@ -23,3 +24,4 @@ export const authService = createHttpAuthService()
 export const questionService = createClientQuestionService()
 export const roomService = createHttpRoomService(questionCache)
 export const adminService = createHttpAdminService(appConfig, questionCache)
+export const paymentService = createHttpPaymentService()

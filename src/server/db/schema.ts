@@ -35,6 +35,20 @@ export const questionBiasEnum = pgEnum("question_bias", [
   "netral",
 ]);
 export const roomStatusEnum = pgEnum("room_status", ["active", "completed"]);
+export const transactionStatusEnum = pgEnum("transaction_status", [
+  "pending",
+  "completed",
+  "failed",
+  "cancelled",
+  "expired",
+  "refunded",
+]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "active",
+  "cancelled",
+  "expired",
+  "refunded",
+]);
 
 const timestamps = {
   created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
@@ -56,6 +70,8 @@ export const plans = pgTable("plan", {
   price: numeric("price", { precision: 12, scale: 2 }).notNull(),
   price_after_discount: numeric("price_after_discount", { precision: 12, scale: 2 }),
   is_active: boolean("is_active").notNull().default(true),
+  // Panjang satu periode langganan; null untuk plan yang tak pernah dibeli (mis. free).
+  duration_days: integer("duration_days"),
   ...timestamps,
 });
 
@@ -269,6 +285,85 @@ export const announcements = pgTable(
   }),
 );
 
+export const transactions = pgTable(
+  "transactions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    plan_id: uuid("plan_id")
+      .notNull()
+      .references(() => plans.id, { onDelete: "cascade" }),
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    status: transactionStatusEnum("status").notNull().default("pending"),
+    // payment_type dari Midtrans, mis. "qris", "bank_transfer", "credit_card".
+    // Null sampai webhook pertama masuk — Snap baru tahu channel setelah
+    // customer memilih di halaman Midtrans, bukan saat transaksi dibuat.
+    method: varchar("method", { length: 32 }),
+    // order_id yang kita generate & kirim ke Midtrans; unik supaya webhook
+    // yang retry/duplikat bisa di-upsert, bukan bikin baris baru.
+    reference_id: text("reference_id").notNull(),
+    // transaction_id milik Midtrans (beda dari reference_id), diisi setelah
+    // charge dibuat / webhook pertama masuk.
+    gateway_transaction_id: text("gateway_transaction_id"),
+    // fraud_status ("accept"/"challenge"/"deny"), relevan untuk credit_card.
+    fraud_status: varchar("fraud_status", { length: 16 }),
+    // expiry_time dari Midtrans, buat cron nandain pending yang basi jadi expired.
+    expires_at: timestamp("expires_at", { withTimezone: true, mode: "string" }),
+    // waktu status jadi completed (settlement_time), beda dari updated_at
+    // yang bisa berubah karena hal lain.
+    paid_at: timestamp("paid_at", { withTimezone: true, mode: "string" }),
+    // field spesifik channel (va_numbers, bill_key, qr_string, actions, dst).
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    ...timestamps,
+  },
+  (table) => ({
+    referenceIdUnique: uniqueIndex("transactions_reference_id_unique").on(
+      table.reference_id,
+    ),
+    gatewayTransactionIdIdx: index(
+      "transactions_gateway_transaction_id_idx",
+    ).on(table.gateway_transaction_id),
+    userIdIdx: index("transactions_user_id_idx").on(table.user_id),
+    planIdIdx: index("transactions_plan_id_idx").on(table.plan_id),
+  }),
+);
+
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    plan_id: uuid("plan_id")
+      .notNull()
+      .references(() => plans.id, { onDelete: "cascade" }),
+    // Transaksi yang memulai/memperpanjang periode ini.
+    transaction_id: uuid("transaction_id")
+      .notNull()
+      .references(() => transactions.id, { onDelete: "restrict" }),
+    status: subscriptionStatusEnum("status").notNull().default("active"),
+    started_at: timestamp("started_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+    // Kapan periode ini habis; cron expire membaca kolom ini.
+    ends_at: timestamp("ends_at", { withTimezone: true, mode: "string" }).notNull(),
+    ...timestamps,
+  },
+  (table) => ({
+    userIdIdx: index("subscriptions_user_id_idx").on(table.user_id),
+    statusEndsAtIdx: index("subscriptions_status_ends_at_idx").on(
+      table.status,
+      table.ends_at,
+    ),
+  }),
+);
+
 export type UserTableRow = typeof users.$inferSelect;
 export type ProviderTableRow = typeof providers.$inferSelect;
 export type PlanTableRow = typeof plans.$inferSelect;
@@ -282,3 +377,5 @@ export type RoomTableRow = typeof rooms.$inferSelect;
 export type QuestionTableRow = typeof questions.$inferSelect;
 export type AppConfigTableRow = typeof app_config.$inferSelect;
 export type AnnouncementTableRow = typeof announcements.$inferSelect;
+export type TransactionTableRow = typeof transactions.$inferSelect;
+export type SubscriptionTableRow = typeof subscriptions.$inferSelect;

@@ -2,12 +2,18 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { appConfig } from '../services'
+import { appConfig, paymentService } from '../services'
 import { formatRupiah } from '../services/types'
+
+const SNAP_JS_SRC =
+  process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
+    ? 'https://app.midtrans.com/snap/snap.js'
+    : 'https://app.sandbox.midtrans.com/snap/snap.js'
 
 const FITUR = [
   { key: 'rooms', freeKey: 'pricing.freeRooms', proKey: 'pricing.unlimited' },
@@ -37,7 +43,7 @@ function Check({ className }: { className?: string }) {
 }
 
 export default function PricingPage() {
-  const { user, upgrade } = useAuth()
+  const { user, refreshUser } = useAuth()
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -50,11 +56,26 @@ export default function PricingPage() {
     setError(false)
     setBusy(true)
     try {
-      await upgrade()
-      router.push('/profile')
+      const { token } = await paymentService.createCharge('pro')
+      // Plan sesungguhnya baru ter-grant setelah webhook Midtrans diproses;
+      // onSuccess/onPending di sini cuma refresh state lalu arahkan ke profil.
+      window.snap?.pay(token, {
+        onSuccess: async () => {
+          await refreshUser()
+          router.push('/profile')
+        },
+        onPending: async () => {
+          await refreshUser()
+          router.push('/profile')
+        },
+        onError: () => {
+          setError(true)
+          setBusy(false)
+        },
+        onClose: () => setBusy(false),
+      })
     } catch {
       setError(true)
-    } finally {
       setBusy(false)
     }
   }
@@ -66,6 +87,11 @@ export default function PricingPage() {
 
   return (
     <div className="flex flex-col items-center gap-8 py-4 sm:gap-10 sm:py-6">
+      <Script
+        src={SNAP_JS_SRC}
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        strategy="afterInteractive"
+      />
       <div className="max-w-xl text-center">
         <h1 className="display-tight font-display text-3xl font-black sm:text-5xl">
           {t('pricing.title')}

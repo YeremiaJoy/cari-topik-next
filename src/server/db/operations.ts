@@ -1,4 +1,4 @@
-import { and, count, desc, eq, isNull, sql } from 'drizzle-orm'
+import { and, count, desc, eq, isNull, lt, sql } from 'drizzle-orm'
 import { buildDeck } from '@/lib/deck'
 import {
   DEFAULT_APP_CONFIG,
@@ -27,11 +27,14 @@ import {
   questions,
   roles,
   rooms,
+  subscriptions,
+  transactions,
   users,
   userLogs,
   userPlans,
   userRoles,
 } from './schema'
+import { mapMidtransStatus, type TransactionStatus } from '../midtrans'
 import {
   deletionStatusSequence,
   deriveConfigFromFreeBenefit,
@@ -696,8 +699,119 @@ export async function setUserPlan(userId: string, plan: Plan) {
   return row
 }
 
-export async function upgradeUserPlan(userId: string) {
-  return setUserPlan(userId, 'pro')
+const TERMINAL_TRANSACTION_STATUSES: TransactionStatus[] = [
+  'completed',
+  'failed',
+  'cancelled',
+  'expired',
+  'refunded',
+]
+
+export async function createPendingTransaction(user: User, planName: Plan) {
+  const [plan] = await getDb()
+    .select({
+      id: plans.id,
+      price: plans.price,
+      price_after_discount: plans.price_after_discount,
+      duration_days: plans.duration_days,
+    })
+    .from(plans)
+    .where(and(eq(plans.name, planName), eq(plans.is_active, true), isNull(plans.deleted_at)))
+    .limit(1)
+  if (!plan || !plan.duration_days) {
+    throw new HttpError(400, 'validation_error', `Plan ${planName} tidak bisa dibeli.`)
+  }
+
+  const amount = plan.price_after_discount ?? plan.price
+  const referenceId = `TRX-${crypto.randomUUID()}`
+  const [transaction] = await getDb()
+    .insert(transactions)
+    .values({ user_id: user.id, plan_id: plan.id, amount, reference_id: referenceId })
+    .returning({ id: transactions.id, reference_id: transactions.reference_id })
+
+  return { transaction, amount: Number(amount) }
+}
+
+export async function markTransactionExpiry(referenceId: string, expiresAt: string) {
+  await getDb()
+    .update(transactions)
+    .set({ expires_at: expiresAt, updated_at: sql`now()` })
+    .where(eq(transactions.reference_id, referenceId))
+}
+
+interface MidtransNotificationStatus {
+  order_id: string
+  transaction_id: string
+  transaction_status: string
+  fraud_status?: string
+  payment_type?: string
+  expiry_time?: string
+}
+
+/**
+ * Idempotent: notification retry Midtrans untuk order_id yang statusnya
+ * sudah terminal akan no-op, tidak dobel-grant plan.
+ */
+export async function applyPaymentNotification(status: MidtransNotificationStatus) {
+  const mapped = mapMidtransStatus(status.transaction_status, status.fraud_status)
+
+  const completed = await getDb().transaction(async (tx) => {
+    const [txn] = await tx
+      .select()
+      .from(transactions)
+      .where(eq(transactions.reference_id, status.order_id))
+      .limit(1)
+    if (!txn) throw new HttpError(404, 'transaction_not_found', 'Transaksi tidak ditemukan.')
+    if (TERMINAL_TRANSACTION_STATUSES.includes(txn.status as TransactionStatus)) return null
+
+    await tx
+      .update(transactions)
+      .set({
+        status: mapped,
+        gateway_transaction_id: status.transaction_id,
+        method: status.payment_type ?? txn.method,
+        fraud_status: status.fraud_status ?? null,
+        paid_at: mapped === 'completed' ? sql`now()` : txn.paid_at,
+        expires_at: status.expiry_time ?? txn.expires_at,
+        updated_at: sql`now()`,
+      })
+      .where(eq(transactions.id, txn.id))
+
+    if (mapped !== 'completed') return null
+
+    const [plan] = await tx
+      .select({ duration_days: plans.duration_days })
+      .from(plans)
+      .where(eq(plans.id, txn.plan_id))
+      .limit(1)
+    await tx.insert(subscriptions).values({
+      user_id: txn.user_id,
+      plan_id: txn.plan_id,
+      transaction_id: txn.id,
+      status: 'active',
+      ends_at: sql`now() + ${plan?.duration_days ?? 30} * interval '1 day'`,
+    })
+    return { userId: txn.user_id }
+  })
+
+  if (completed) await setUserPlan(completed.userId, 'pro')
+}
+
+/** Dipanggil cron: turunkan user yang periode langganannya sudah lewat. */
+export async function expireDueSubscriptions() {
+  const due = await getDb()
+    .select({ id: subscriptions.id, user_id: subscriptions.user_id })
+    .from(subscriptions)
+    .where(and(eq(subscriptions.status, 'active'), lt(subscriptions.ends_at, sql`now()`)))
+
+  for (const sub of due) {
+    await setUserPlan(sub.user_id, 'free')
+    await getDb()
+      .update(subscriptions)
+      .set({ status: 'expired', updated_at: sql`now()` })
+      .where(eq(subscriptions.id, sub.id))
+  }
+  return { expired: due.length }
 }
 
 export async function markUserDeletionProcessing(userId: string) {

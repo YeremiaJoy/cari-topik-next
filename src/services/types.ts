@@ -163,9 +163,19 @@ export interface SnapCharge {
   referenceId: string
 }
 
+export type TransactionStatus =
+  | 'pending'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'expired'
+  | 'refunded'
+
 export interface PaymentService {
   /** Mulai pembelian plan; hasilnya dipakai untuk window.snap.pay(token). */
   createCharge(plan: Plan): Promise<SnapCharge>
+  /** Polling status transaksi — plan sesungguhnya baru ter-grant saat status 'completed'. */
+  getStatus(referenceId: string): Promise<{ status: TransactionStatus }>
 }
 
 export interface RoomService {

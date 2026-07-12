@@ -180,6 +180,9 @@ export const dict = {
 
   'profile.title': 'Profil',
   'profile.memberSince': 'Bergabung sejak {{date}}',
+  'profile.paymentProcessing': 'Mengonfirmasi pembayaranmu… bisa makan waktu beberapa detik.',
+  'profile.paymentFailed': 'Pembayaran tidak berhasil.',
+  'profile.paymentTimeout': 'Masih mengonfirmasi pembayaranmu — cek lagi sebentar.',
   'profile.planTitle': 'Paket kamu',
   'profile.planFreeDesc': '1 room chat, mode berdua saja, 5 kartu per 6 jam.',
   'profile.planProDesc': 'Mode grup, kartu tanpa batas, main offline. {{price}} per tahun.',

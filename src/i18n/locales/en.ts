@@ -182,6 +182,9 @@ export const dict: Record<MessageKey, string> = {
 
   'profile.title': 'Profile',
   'profile.memberSince': 'Member since {{date}}',
+  'profile.paymentProcessing': 'Confirming your payment… this can take a few seconds.',
+  'profile.paymentFailed': 'Payment didn’t go through.',
+  'profile.paymentTimeout': 'Still confirming your payment — check back shortly.',
   'profile.planTitle': 'Your plan',
   'profile.planFreeDesc': '1 chat room, pair mode only, 5 cards per 6 hours.',
   'profile.planProDesc': 'Group mode, unlimited cards, offline play. {{price}} per year.',

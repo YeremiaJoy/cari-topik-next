@@ -43,7 +43,7 @@ function Check({ className }: { className?: string }) {
 }
 
 export default function PricingPage() {
-  const { user, refreshUser } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -56,18 +56,13 @@ export default function PricingPage() {
     setError(false)
     setBusy(true)
     try {
-      const { token } = await paymentService.createCharge('pro')
-      // Plan sesungguhnya baru ter-grant setelah webhook Midtrans diproses;
-      // onSuccess/onPending di sini cuma refresh state lalu arahkan ke profil.
+      const { token, referenceId } = await paymentService.createCharge('pro')
+      // Plan sesungguhnya baru ter-grant setelah webhook Midtrans diproses —
+      // jangan tunggu di sini, arahkan langsung ke profil dan biarkan halaman
+      // itu polling status transaksi sampai webhook selesai diproses.
       window.snap?.pay(token, {
-        onSuccess: async () => {
-          await refreshUser()
-          router.push('/profile')
-        },
-        onPending: async () => {
-          await refreshUser()
-          router.push('/profile')
-        },
+        onSuccess: () => router.push(`/profile?ref=${referenceId}`),
+        onPending: () => router.push(`/profile?ref=${referenceId}`),
         onError: () => {
           setError(true)
           setBusy(false)

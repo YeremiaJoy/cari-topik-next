@@ -1,27 +1,74 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { appConfig } from '../services'
+import { appConfig, paymentService } from '../services'
 import { formatRupiah } from '../services/types'
 import { useLang, localeTag } from '../i18n/useLang'
+
+const POLL_INTERVAL_MS = 1500
+const POLL_MAX_ATTEMPTS = 20
+const FAILED_STATUSES = new Set(['failed', 'cancelled', 'expired', 'refunded'])
 
 function formatTanggal(iso: string, locale: string): string {
   return new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 export default function ProfilePage() {
-  const { user, logout, deleteAccount } = useAuth()
+  const { user, logout, deleteAccount, refreshUser } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const reduce = useReducedMotion()
   const { t } = useTranslation()
   const { lang, setLang } = useLang()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [paymentState, setPaymentState] = useState<'idle' | 'processing' | 'failed' | 'timeout'>('idle')
+
+  const ref = searchParams.get('ref')
+
+  useEffect(() => {
+    if (!ref || !user || user.plan === 'pro') return
+    let cancelled = false
+    let attempts = 0
+
+    const poll = async () => {
+      attempts += 1
+      try {
+        const { status } = await paymentService.getStatus(ref)
+        if (cancelled) return
+        if (status === 'completed') {
+          await refreshUser()
+          if (cancelled) return
+          setPaymentState('idle')
+          router.replace('/profile')
+          return
+        }
+        if (FAILED_STATUSES.has(status)) {
+          setPaymentState('failed')
+          return
+        }
+      } catch {
+        // biarkan retry di attempt berikutnya
+      }
+      if (attempts >= POLL_MAX_ATTEMPTS) {
+        setPaymentState('timeout')
+        return
+      }
+      timer = setTimeout(poll, POLL_INTERVAL_MS)
+    }
+
+    setPaymentState('processing')
+    let timer = setTimeout(poll, POLL_INTERVAL_MS)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [ref, user, refreshUser, router])
 
   if (!user) return null
 
@@ -52,6 +99,28 @@ export default function ProfilePage() {
       <h1 className="display-tight font-display text-3xl font-black sm:text-5xl">
         {t('profile.title')}
       </h1>
+
+      {paymentState !== 'idle' && (
+        <p
+          role="status"
+          className={
+            paymentState === 'failed'
+              ? 'rounded-2xl border border-terracotta-400 bg-terracotta-100 px-5 py-3 text-center text-sm font-semibold text-terracotta-700'
+              : 'rounded-2xl border border-cream-200 bg-butter-100 px-5 py-3 text-center text-sm font-semibold text-cocoa-700'
+          }
+        >
+          {paymentState === 'processing' && t('profile.paymentProcessing')}
+          {paymentState === 'timeout' && t('profile.paymentTimeout')}
+          {paymentState === 'failed' && (
+            <>
+              {t('profile.paymentFailed')}{' '}
+              <Link href="/pricing" className="underline">
+                {t('paywall.upgrade')}
+              </Link>
+            </>
+          )}
+        </p>
+      )}
 
       {/* Identitas */}
       <section className="flex items-center gap-4 rounded-3xl border border-cream-200 bg-white p-6 shadow-warm-sm sm:p-8">

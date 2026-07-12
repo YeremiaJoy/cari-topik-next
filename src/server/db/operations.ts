@@ -739,6 +739,15 @@ export async function markTransactionExpiry(referenceId: string, expiresAt: stri
     .where(eq(transactions.reference_id, referenceId))
 }
 
+export async function getTransactionStatus(userId: string, referenceId: string) {
+  const [txn] = await getDb()
+    .select({ status: transactions.status })
+    .from(transactions)
+    .where(and(eq(transactions.reference_id, referenceId), eq(transactions.user_id, userId)))
+    .limit(1)
+  return txn ?? null
+}
+
 interface MidtransNotificationStatus {
   order_id: string
   transaction_id: string

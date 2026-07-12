@@ -7,7 +7,7 @@ Supabase langsung — hanya alur auth (OAuth Google) yang memakai klien browser.
 ## Arsitektur
 
 - **Auth** — Supabase Auth (Google, PKCE) via `@supabase/ssr`; sesi disimpan di
-  cookie, di-refresh middleware (`src/middleware.ts`), ditukar di
+  cookie, di-refresh proxy (`src/proxy.ts`), ditukar di
   `/auth/callback`. API route membaca sesi dari cookie per-request
   (`src/server/supabase.ts`) lalu sinkron profil aplikasi ke Neon.
 - **API routes** — kontrak di `docs/API_SPEC.md` repo lama, base `/api`:

@@ -18,6 +18,10 @@ export function createHttpAuthService(): AuthService {
         provider: 'google',
         options: { redirectTo: `${window.location.origin}/auth/callback?next=/room` },
       })
+
+      // add provider (google) to provider tbale
+      // assign user role to user_role table
+      
       if (error) throw error
       // Browser sedang redirect ke Google; promise ini sengaja tidak pernah selesai.
       return new Promise<User>(() => {})

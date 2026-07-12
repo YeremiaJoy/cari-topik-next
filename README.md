@@ -52,3 +52,4 @@ Redirect URL OAuth di Supabase perlu ditambah: `http://localhost:3000/auth/callb
 - `yarn test` — vitest (deck, countdown, storage, installGate, kamus i18n)
 - `yarn typecheck`
 # cari-topik-next
+# cari-topik-next

@@ -261,6 +261,9 @@ export const dict: Record<MessageKey, string> = {
   'admin.config.freeMaxRooms': 'Max rooms (free plan)',
   'admin.config.proPrice': 'Pro price (before discount)',
   'admin.config.proPriceAfterDiscount': 'Pro price (after discount)',
+  'admin.config.maintenanceEnabled': 'Maintenance mode',
+  'admin.config.maintenanceMessageId': 'Maintenance message (Bahasa Indonesia)',
+  'admin.config.maintenanceMessageEn': 'Maintenance message (English)',
   'admin.announce.hint':
     'The announcement shows as a banner at the top of every page for all users. Clear both texts and save to remove it.',
   'admin.announce.messageId': 'Message (Bahasa Indonesia)',

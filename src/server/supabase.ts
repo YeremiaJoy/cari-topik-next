@@ -21,7 +21,7 @@ export async function supabaseServer() {
               cookieStore.set(name, value, options),
             )
           } catch {
-            // Dipanggil dari server component — refresh cookie ditangani middleware.
+            // Dipanggil dari server component — refresh cookie ditangani proxy.
           }
         },
       },

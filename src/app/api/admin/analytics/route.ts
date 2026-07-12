@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/server/auth'
-import { withErrors } from '@/server/handler'
+import { withAdmin } from '@/server/handler'
 import { fetchProfiles, fetchQuestions, fetchRoomStats } from '@/server/adminData'
 import type { AdminAnalytics, Category, Depth, WeeklyCount } from '@/services/types'
 
@@ -31,12 +30,11 @@ const weeklyBuckets = (times: number[], weeks: number): WeeklyCount[] => {
 }
 
 export async function GET() {
-  return withErrors(async () => {
-    const { supabase } = await requireAdmin()
+  return withAdmin(async () => {
     const [users, rooms, bank] = await Promise.all([
-      fetchProfiles(supabase),
-      fetchRoomStats(supabase),
-      fetchQuestions(supabase),
+      fetchProfiles(),
+      fetchRoomStats(),
+      fetchQuestions(),
     ])
     const categories: Category[] = ['pasangan', 'teman', 'keluarga']
     const depths: Depth[] = ['ringan', 'sedang', 'dalam']

@@ -1,25 +1,16 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabaseServer } from './supabase'
 import { toUser } from './mappers'
-import type { ProfileRow } from './mappers'
+import { assertActiveProfile, syncAuthProfile } from './db/operations'
+import { HttpError } from './httpError'
 import type { User } from '../services/types'
 
-export class HttpError extends Error {
-  statusCode: number
-  code: string
-  constructor(statusCode: number, code: string, message: string) {
-    super(message)
-    this.statusCode = statusCode
-    this.code = code
-  }
-}
+export { HttpError }
 
 export interface AuthedContext {
-  supabase: SupabaseClient
   user: User
 }
 
-/** Ambil sesi + profil; lempar HttpError 401 bila belum login. */
+/** Ambil sesi Supabase Auth, lalu sinkronkan profil aplikasi di Neon. */
 export async function requireUser(): Promise<AuthedContext> {
   const supabase = await supabaseServer()
   const {
@@ -27,13 +18,21 @@ export async function requireUser(): Promise<AuthedContext> {
   } = await supabase.auth.getUser()
   if (!authUser) throw new HttpError(401, 'not_authenticated', 'Harus login.')
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', authUser.id)
-    .single()
-  if (error || !data) throw new HttpError(401, 'not_authenticated', 'Profil tidak ditemukan.')
-  return { supabase, user: toUser(data as ProfileRow) }
+  const meta = authUser.user_metadata ?? {}
+  const name =
+    typeof meta.full_name === 'string'
+      ? meta.full_name
+      : typeof meta.name === 'string'
+        ? meta.name
+        : (authUser.email?.split('@')[0] ?? '')
+  const avatarUrl = typeof meta.avatar_url === 'string' ? meta.avatar_url : ''
+  const email = authUser.email ?? ''
+
+  const providerName =
+    typeof authUser.app_metadata?.provider === 'string' ? authUser.app_metadata.provider : 'google'
+  const profile = await syncAuthProfile({ id: authUser.id, name, email, avatarUrl, providerName })
+  assertActiveProfile(profile)
+  return { user: toUser(profile) }
 }
 
 /** Seperti requireUser, plus wajib role admin (403 bila bukan). */

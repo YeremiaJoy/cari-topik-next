@@ -8,8 +8,8 @@ import type { ReactNode } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { useLang } from '../i18n/useLang'
-import { adminService } from '../services'
-import type { Announcement } from '../services/types'
+import { adminService, appConfig } from '../services'
+import type { Announcement, AppConfig } from '../services/types'
 import NavLink from './NavLink'
 
 function LogoMark({ className }: { className?: string }) {
@@ -97,13 +97,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { lang, setLang } = useLang()
   const [menuOpen, setMenuOpen] = useState(false)
   const [announcement, setAnnouncement] = useState<Announcement | null>(null)
+  const [maintenance, setMaintenance] = useState<AppConfig['maintenance'] | null>(null)
   const pathname = usePathname()
   const reduce = useReducedMotion()
   const isAdmin = user?.role === 'admin'
 
-  // Pengumuman dari admin; dibaca ulang tiap pindah halaman.
+  // Konfigurasi publik dari admin; dibaca ulang tiap pindah halaman.
   useEffect(() => {
     adminService.getAnnouncement().then(setAnnouncement)
+    appConfig.refresh().then((config) => setMaintenance(config.maintenance ?? null))
   }, [pathname])
 
   useEffect(() => {
@@ -248,6 +250,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
           )}
         </AnimatePresence>
       </header>
+
+      {maintenance?.enabled && (
+        <div className="border-b border-terracotta-200 bg-terracotta-50">
+          <p className="mx-auto max-w-4xl px-4 py-2.5 text-center text-sm font-bold text-cocoa-800 sm:px-6">
+            {maintenance.message[lang] || maintenance.message.id || maintenance.message.en}
+          </p>
+        </div>
+      )}
 
       {announcement?.enabled && (
         <div className="border-b border-butter-200 bg-butter-100">

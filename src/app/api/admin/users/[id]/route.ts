@@ -1,39 +1,35 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/server/auth'
-import { withErrors } from '@/server/handler'
+import { HttpError } from '@/server/auth'
+import { withAdmin } from '@/server/handler'
 import { jsonError } from '@/server/errors'
 import { toUser } from '@/server/mappers'
-import type { ProfileRow } from '@/server/mappers'
+import { finalizeSoftDeleteUser, markUserDeletionProcessing, setUserPlan } from '@/server/db/operations'
+import { deleteAuthUser } from '@/server/supabaseAdmin'
 
 type Params = { params: Promise<{ id: string }> }
 
 /** Ubah plan user (free/pro). Role tidak pernah bisa diubah lewat API. */
 export async function PATCH(request: Request, { params }: Params) {
-  return withErrors(async () => {
-    const { supabase } = await requireAdmin()
+  return withAdmin(async () => {
     const { id } = await params
     const body = await request.json().catch(() => null)
     const plan = body?.plan
     if (plan !== 'free' && plan !== 'pro') {
       return jsonError(400, 'validation_error', 'plan harus free atau pro.')
     }
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ plan })
-      .eq('id', id)
-      .select()
-      .single()
-    if (error) throw error
-    return NextResponse.json(toUser(data as ProfileRow))
+    return NextResponse.json(toUser(await setUserPlan(id, plan)))
   })
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  return withErrors(async () => {
-    const { supabase } = await requireAdmin()
+  return withAdmin(async ({ user }) => {
     const { id } = await params
-    const { error } = await supabase.rpc('admin_delete_user', { p_user_id: id })
-    if (error) throw error
+    if (id === user.id) {
+      throw new HttpError(409, 'cannot_delete_self', 'Tidak bisa menghapus akun sendiri dari sini.')
+    }
+    await markUserDeletionProcessing(id)
+    await deleteAuthUser(id)
+    await finalizeSoftDeleteUser(id)
     return new NextResponse(null, { status: 204 })
   })
 }

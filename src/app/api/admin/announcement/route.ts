@@ -1,23 +1,18 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/server/auth'
-import { withErrors } from '@/server/handler'
+import { withAdmin } from '@/server/handler'
 import { toAnnouncement } from '@/server/mappers'
-import type { AnnouncementRow } from '@/server/mappers'
+import { getAnnouncementRow, updateAnnouncementRow } from '@/server/db/operations'
 import type { Announcement } from '@/services/types'
 
 export async function GET() {
-  return withErrors(async () => {
-    const { supabase } = await requireAdmin()
-    const { data, error } = await supabase.from('announcements').select('*').maybeSingle()
-    if (error) throw error
-    return NextResponse.json(toAnnouncement(data as AnnouncementRow | null))
+  return withAdmin(async () => {
+    return NextResponse.json(toAnnouncement(await getAnnouncementRow()))
   })
 }
 
 /** PUT body: Announcement atau null (null = kosongkan & nonaktifkan). */
 export async function PUT(request: Request) {
-  return withErrors(async () => {
-    const { supabase } = await requireAdmin()
+  return withAdmin(async () => {
     const announcement = (await request.json().catch(() => null)) as Announcement | null
     const row = announcement
       ? {
@@ -26,8 +21,7 @@ export async function PUT(request: Request) {
           enabled: announcement.enabled,
         }
       : { message_id: '', message_en: '', enabled: false }
-    const { error } = await supabase.from('announcements').update(row).eq('id', true)
-    if (error) throw error
+    await updateAnnouncementRow(row)
     return new NextResponse(null, { status: 204 })
   })
 }

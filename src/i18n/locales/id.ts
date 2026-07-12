@@ -259,6 +259,9 @@ export const dict = {
   'admin.config.freeMaxRooms': 'Maks. room akun free',
   'admin.config.proPrice': 'Harga Pro (sebelum diskon)',
   'admin.config.proPriceAfterDiscount': 'Harga Pro (setelah diskon)',
+  'admin.config.maintenanceEnabled': 'Mode maintenance',
+  'admin.config.maintenanceMessageId': 'Pesan maintenance (Bahasa Indonesia)',
+  'admin.config.maintenanceMessageEn': 'Pesan maintenance (English)',
   'admin.announce.hint':
     'Pengumuman tampil sebagai banner di atas halaman untuk semua pengguna. Kosongkan kedua teks lalu simpan untuk menghapusnya.',
   'admin.announce.messageId': 'Pesan (Bahasa Indonesia)',

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1783826082470,
+      "tag": "0000_foamy_shooting_star",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783827578050,
+      "tag": "0001_overjoyed_lethal_legion",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783828958442,
+      "tag": "0002_fancy_rocket_raccoon",
+      "breakpoints": true
+    }
+  ]
+}

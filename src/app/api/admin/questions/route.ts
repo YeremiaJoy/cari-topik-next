@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/server/auth'
-import { withErrors } from '@/server/handler'
+import { withAdmin } from '@/server/handler'
 import { jsonError } from '@/server/errors'
 import { fetchQuestions } from '@/server/adminData'
 import { toQuestion } from '@/server/mappers'
@@ -12,15 +11,13 @@ const DEPTHS: Depth[] = ['ringan', 'sedang', 'dalam']
 const BIASES: Bias[] = ['introvert', 'extrovert', 'netral']
 
 export async function GET() {
-  return withErrors(async () => {
-    await requireAdmin()
+  return withAdmin(async () => {
     return NextResponse.json(await fetchQuestions())
   })
 }
 
 export async function POST(request: Request) {
-  return withErrors(async () => {
-    await requireAdmin()
+  return withAdmin(async () => {
     const body = await request.json().catch(() => null)
     const textId = body?.text?.id?.trim()
     const textEn = body?.text?.en?.trim()

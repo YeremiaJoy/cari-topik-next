@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { HttpError, requireAdmin } from '@/server/auth'
-import { withErrors } from '@/server/handler'
+import { HttpError } from '@/server/auth'
+import { withAdmin } from '@/server/handler'
 import { jsonError } from '@/server/errors'
 import { toUser } from '@/server/mappers'
 import { finalizeSoftDeleteUser, markUserDeletionProcessing, setUserPlan } from '@/server/db/operations'
@@ -10,8 +10,7 @@ type Params = { params: Promise<{ id: string }> }
 
 /** Ubah plan user (free/pro). Role tidak pernah bisa diubah lewat API. */
 export async function PATCH(request: Request, { params }: Params) {
-  return withErrors(async () => {
-    await requireAdmin()
+  return withAdmin(async () => {
     const { id } = await params
     const body = await request.json().catch(() => null)
     const plan = body?.plan
@@ -23,8 +22,7 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  return withErrors(async () => {
-    const { user } = await requireAdmin()
+  return withAdmin(async ({ user }) => {
     const { id } = await params
     if (id === user.id) {
       throw new HttpError(409, 'cannot_delete_self', 'Tidak bisa menghapus akun sendiri dari sini.')

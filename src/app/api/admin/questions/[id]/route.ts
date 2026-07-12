@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/server/auth'
-import { withErrors } from '@/server/handler'
+import { withAdmin } from '@/server/handler'
 import { toQuestion } from '@/server/mappers'
 import { deleteQuestionRow, updateQuestionRow } from '@/server/db/operations'
 
 type Params = { params: Promise<{ id: string }> }
 
 export async function PATCH(request: Request, { params }: Params) {
-  return withErrors(async () => {
-    await requireAdmin()
+  return withAdmin(async () => {
     const { id } = await params
     const patch = (await request.json().catch(() => null)) ?? {}
     const row: Parameters<typeof updateQuestionRow>[1] = {}
@@ -25,8 +23,7 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  return withErrors(async () => {
-    await requireAdmin()
+  return withAdmin(async () => {
     const { id } = await params
     await deleteQuestionRow(id)
     return new NextResponse(null, { status: 204 })

@@ -7,6 +7,7 @@ import type {
   Personality,
   Plan,
   Question,
+  QuestionType,
   Role,
   Room,
   User,
@@ -49,6 +50,7 @@ export interface QuestionRow {
   depth: Depth
   bias: Bias
   for_group: boolean
+  type: QuestionType
 }
 
 export interface AppConfigRow {
@@ -115,6 +117,7 @@ export function toQuestion(row: QuestionRow): Question {
     depth: row.depth,
     bias: row.bias,
     forGroup: row.for_group || undefined,
+    type: row.type,
   }
 }
 

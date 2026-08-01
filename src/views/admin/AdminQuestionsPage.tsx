@@ -71,6 +71,8 @@ export default function AdminQuestionsPage() {
         category: form.category,
         depth: form.depth,
         bias: form.bias,
+        // Kartu flag punya form editor sendiri (lihat task berikutnya); form ini selalu bikin tipe 'question'.
+        type: 'question' as const,
         forGroup: form.forGroup || undefined,
       }
       if (editingId === 'new') await adminService.createQuestion(input)

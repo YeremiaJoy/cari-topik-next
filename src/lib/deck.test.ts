@@ -10,6 +10,7 @@ const q = (
   bias: Question['bias'],
   forGroup = false,
   category: Question['category'] = 'pasangan',
+  type: Question['type'] = 'question',
 ): Question => ({
   id,
   text: { id: `t-${id}`, en: `t-${id}` },
@@ -17,6 +18,7 @@ const q = (
   depth,
   bias,
   forGroup: forGroup || undefined,
+  type,
 })
 
 const BANK: Question[] = [

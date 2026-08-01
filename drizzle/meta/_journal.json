@@ -29,6 +29,13 @@
       "when": 1783846273101,
       "tag": "0003_naive_the_executioner",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785570143382,
+      "tag": "0004_lyrical_sumo",
+      "breakpoints": true
     }
   ]
 }

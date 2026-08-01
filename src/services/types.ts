@@ -4,6 +4,8 @@ export type Personality = 'introvert' | 'extrovert'
 export type Category = 'pasangan' | 'teman' | 'keluarga'
 export type Depth = 'ringan' | 'sedang' | 'dalam'
 export type Bias = 'introvert' | 'extrovert' | 'netral'
+export type QuestionType = 'question' | 'flag'
+export type FlagVote = 'red' | 'green'
 
 export const FREE_MAX_PARTICIPANTS = 2
 export const FREE_MAX_QUESTIONS = 5
@@ -57,6 +59,8 @@ export interface Question {
   category: Category
   depth: Depth
   bias: Bias
+  /** 'flag' = kartu skenario Red vs Green (khusus pasangan, 2 peserta). */
+  type: QuestionType
   /** Kartu khusus mode grup (3+ orang); tanpa flag ini kartu untuk berdua. */
   forGroup?: boolean
 }

@@ -191,6 +191,7 @@ async function getQuestionRows(client: SelectClient): Promise<QuestionRow[]> {
       depth: questions.depth,
       bias: questions.bias,
       for_group: questions.for_group,
+      type: questions.type,
     })
     .from(questions)
     .innerJoin(questionCategories, eq(questions.category_id, questionCategories.id))

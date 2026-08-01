@@ -34,6 +34,7 @@ export const questionBiasEnum = pgEnum("question_bias", [
   "extrovert",
   "netral",
 ]);
+export const questionTypeEnum = pgEnum("question_type", ["question", "flag"]);
 export const roomStatusEnum = pgEnum("room_status", ["active", "completed"]);
 export const transactionStatusEnum = pgEnum("transaction_status", [
   "pending",
@@ -206,6 +207,7 @@ export const questions = pgTable("questions", {
     .references(() => questionCategories.id, { onDelete: "restrict" }),
   depth: questionDepthEnum("depth").notNull(),
   bias: questionBiasEnum("bias").notNull(),
+  type: questionTypeEnum("type").notNull().default("question"),
   for_group: boolean("for_group").notNull().default(false),
   created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
     .notNull()

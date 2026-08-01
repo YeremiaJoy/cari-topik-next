@@ -126,6 +126,27 @@ export const dict: Record<MessageKey, string> = {
   'card.favAdd': 'Save to favorites',
   'card.favRemove': 'Remove from favorites',
 
+  'flag.toggle': 'Flag Mode',
+  'flag.toggleHint': 'Every card becomes a Red vs Green scenario',
+  'flag.proBadge': 'PRO',
+  'flag.on': 'The next card switches to flag mode.',
+  'flag.off': 'Back to regular questions.',
+  'flag.exhausted': 'No flag cards left. Back to regular questions.',
+  'flag.scenarioN': 'Scenario {{n}}',
+  'flag.label': 'Red vs Green',
+  'flag.partner1': 'Partner 1',
+  'flag.partner2': 'Partner 2',
+  'flag.red': 'RED',
+  'flag.green': 'GREEN',
+  'flag.locked': 'Locked in',
+  'flag.waiting': 'Waiting for a pick',
+  'flag.voteAria': 'Pick {{choice}} for {{partner}}',
+  'flag.same': 'Same answer',
+  'flag.different': 'You disagree',
+  'flag.recapTitle': 'Flag Mode',
+  'flag.recapAgree': 'Agreed on {{agree}} of {{total}}',
+  'flag.recapDisagree': 'You disagreed — worth revisiting?',
+
   'paywall.participants.title': 'Want to chat with a bigger group?',
   'paywall.participants.body':
     'Free accounts are pair mode only. Upgrade to Pro to unlock group mode with cards made for a crowd.',
@@ -136,6 +157,9 @@ export const dict: Record<MessageKey, string> = {
   'paywall.rooms.title': 'Ready for another room?',
   'paywall.rooms.body':
     'Free accounts can start 1 chat room. A finished room can be deleted after 6 hours to make space for a new one — or upgrade to Pro for unlimited rooms.',
+  'paywall.flagMode.title': 'Want every card to be Red vs Green?',
+  'paywall.flagMode.body':
+    'Pro accounts can switch to pure flag mode any time mid-session — a whole deck of scenarios to argue over together.',
   'paywall.install.title': 'Take CariTopik anywhere',
   'paywall.install.body':
     'Installing the app and playing offline is a Pro perk. Upgrade to add CariTopik to your home screen.',

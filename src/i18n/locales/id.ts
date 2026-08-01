@@ -124,6 +124,27 @@ export const dict = {
   'card.favAdd': 'Simpan ke favorit',
   'card.favRemove': 'Hapus dari favorit',
 
+  'flag.toggle': 'Mode Flag',
+  'flag.toggleHint': 'Semua kartu jadi skenario Red vs Green',
+  'flag.proBadge': 'PRO',
+  'flag.on': 'Kartu berikutnya jadi mode flag.',
+  'flag.off': 'Kembali ke pertanyaan biasa.',
+  'flag.exhausted': 'Kartu flag habis. Lanjut ke pertanyaan biasa.',
+  'flag.scenarioN': 'Skenario {{n}}',
+  'flag.label': 'Red vs Green',
+  'flag.partner1': 'Pasangan 1',
+  'flag.partner2': 'Pasangan 2',
+  'flag.red': 'RED',
+  'flag.green': 'GREEN',
+  'flag.locked': 'Sudah pilih',
+  'flag.waiting': 'Menunggu pilihan',
+  'flag.voteAria': 'Pilih {{choice}} untuk {{partner}}',
+  'flag.same': 'Sama',
+  'flag.different': 'Beda pendapat',
+  'flag.recapTitle': 'Mode Flag',
+  'flag.recapAgree': 'Sepakat {{agree}} dari {{total}}',
+  'flag.recapDisagree': 'Beda pendapat — bahas lagi?',
+
   'paywall.participants.title': 'Mau ngobrol ramai-ramai?',
   'paywall.participants.body':
     'Akun Gratis hanya bisa mode berdua. Upgrade ke Pro untuk membuka mode grup dengan kartu khusus ramai-ramai.',
@@ -134,6 +155,9 @@ export const dict = {
   'paywall.rooms.title': 'Siap buat room lagi?',
   'paywall.rooms.body':
     'Akun Gratis hanya bisa memulai 1 room chat. Room yang sudah selesai bisa dihapus setelah 6 jam untuk memulai yang baru — atau upgrade ke Pro untuk room tanpa batas.',
+  'paywall.flagMode.title': 'Mau semua kartu jadi Red vs Green?',
+  'paywall.flagMode.body':
+    'Akun Pro bisa menyalakan mode flag murni kapan saja di tengah sesi — satu dek penuh skenario buat dibahas berdua.',
   'paywall.install.title': 'Bawa CariTopik ke mana saja',
   'paywall.install.body':
     'Pasang sebagai aplikasi dan main offline adalah keunggulan Pro. Upgrade untuk memasang CariTopik di layar utamamu.',

@@ -60,10 +60,10 @@ function VotePanel({
               key={choice}
               onClick={() => onPick(choice)}
               aria-label={t('flag.voteAria', { choice: t(`flag.${choice}`), partner })}
-              className={`press flex flex-1 items-center justify-center gap-1.5 rounded-full border-2 py-2 text-xs font-extrabold ${
-                choice === 'red'
-                  ? 'border-flag-red bg-flag-red-soft text-flag-red'
-                  : 'border-flag-green bg-flag-green-soft text-flag-green'
+              // Bidang solid, bukan tint tipis — warnanya harus kebaca dari
+              // seberang meja, bukan cuma pas HP di depan muka.
+              className={`press flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-sm font-extrabold tracking-wide text-white shadow-warm-sm ${
+                choice === 'red' ? 'bg-flag-red' : 'bg-flag-green-deep'
               }`}
             >
               <Glyph name={choice === 'red' ? 'flagRed' : 'flagGreen'} className="h-[26px] w-[26px]" />
@@ -81,12 +81,13 @@ function ResultTile({ partnerKey, vote }: { partnerKey: 'partner1' | 'partner2';
   const red = vote === 'red'
   return (
     <div
-      className={`flex-1 rounded-2xl border-2 p-3 text-center ${
-        red ? 'border-flag-red bg-flag-red-soft text-flag-red' : 'border-flag-green bg-flag-green-soft text-flag-green'
+      className={`flex-1 rounded-2xl p-3 text-center text-white shadow-warm-sm ${
+        red ? 'bg-flag-red' : 'bg-flag-green-deep'
       }`}
     >
       <Glyph name={red ? 'flagRed' : 'flagGreen'} className="mx-auto h-[34px] w-[34px]" />
       <p className="mt-1 text-[10px] font-bold uppercase tracking-wider">{t(`flag.${partnerKey}`)}</p>
+      <p className="text-xs font-extrabold tracking-wide">{t(`flag.${vote}`)}</p>
     </div>
   )
 }
@@ -117,6 +118,12 @@ export default function FlagCard({ question, nomor, favorit, onToggleFavorit, on
       style={{ transformPerspective: 1000 }}
       className="rounded-[32px] border border-cream-200 bg-cream-100 p-3 shadow-warm-md"
     >
+      {/* Pita gradasi merah → hijau: penanda mode yang kebaca sebelum satu kata pun dibaca. */}
+      <div
+        aria-hidden
+        className="mb-2.5 h-1.5 rounded-full bg-gradient-to-r from-flag-red via-butter-200 to-flag-green-deep"
+      />
+
       {revealed ? (
         <div className="flex gap-2">
           <ResultTile partnerKey="partner1" vote={p1} />
@@ -150,7 +157,14 @@ export default function FlagCard({ question, nomor, favorit, onToggleFavorit, on
       </div>
 
       {revealed ? (
-        <p className="py-1 text-center font-display text-lg font-black italic text-terracotta-600">
+        // Sepakat → hijau, beda → merah. Vonisnya ikut berwarna, bukan cuma teks.
+        <p
+          className={`rounded-2xl py-2 text-center font-display text-lg font-black italic ${
+            p1 === p2
+              ? 'bg-flag-green-soft text-flag-green-deep'
+              : 'bg-flag-red-soft text-flag-red'
+          }`}
+        >
           {p1 === p2 ? t('flag.same') : t('flag.different')}
         </p>
       ) : (

@@ -126,11 +126,14 @@ export default function SessionPage() {
             <p className="mt-2 text-sm font-bold text-cocoa-700">
               {t('flag.recapAgree', { agree: agreed, total: flagEntries.length })}
             </p>
-            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-cream-100">
+            {/* Bagian sepakat hijau, sisanya merah — dua warna, bukan satu bar
+                hijau di atas latar netral. */}
+            <div className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-flag-red-soft">
               <div
-                className="h-full rounded-full bg-flag-green"
+                className="h-full bg-flag-green-deep"
                 style={{ width: `${(agreed / flagEntries.length) * 100}%` }}
               />
+              <div className="h-full flex-1 bg-flag-red" />
             </div>
 
             {disagreed.length > 0 && (
@@ -142,7 +145,7 @@ export default function SessionPage() {
                   {disagreed.map((q) => (
                     <div
                       key={q.id}
-                      className="w-52 shrink-0 snap-start rounded-2xl bg-cocoa-900 p-4 text-sm leading-snug text-white"
+                      className="w-52 shrink-0 snap-start rounded-2xl border-l-4 border-flag-red bg-flag-red-soft p-4 text-sm leading-snug text-cocoa-900"
                     >
                       {q.text[lang]}
                     </div>
@@ -261,35 +264,55 @@ export default function SessionPage() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
-      <div className="flex items-center justify-between text-sm text-cocoa-500">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between text-sm text-cocoa-500">
           <span className="font-bold tabular-nums">
             {t('session.cardIndex', { n: playedCount(room) })}
           </span>
-          {showFlagToggle && (
-            <button
-              onClick={toggleFlagMode}
-              aria-pressed={room.flagMode}
-              className={`press flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-xs font-bold ${
-                room.flagMode
-                  ? 'border-terracotta-500 bg-terracotta-100 text-terracotta-700'
-                  : 'border-cream-200 bg-white text-cocoa-500'
+          <button onClick={akhiri} className="press rounded-md font-medium hover:text-terracotta-600">
+            {t('session.endSession')}
+          </button>
+        </div>
+
+        {/* Pil belah merah|hijau — kontrolnya sendiri yang jadi petunjuk warna,
+            jadi mode-nya kebaca sebelum tombolnya disentuh. */}
+        {showFlagToggle && (
+          <button
+            onClick={toggleFlagMode}
+            aria-pressed={room.flagMode}
+            title={t('flag.toggleHint')}
+            className={`press flex w-full items-stretch overflow-hidden rounded-full border-2 text-xs font-extrabold ${
+              room.flagMode ? 'border-cocoa-900 shadow-warm-md' : 'border-cream-200'
+            }`}
+          >
+            <span
+              className={`flex flex-1 items-center justify-end py-2 pr-2 ${
+                room.flagMode ? 'bg-flag-red text-white' : 'bg-flag-red-soft text-flag-red'
               }`}
             >
-              <Glyph name="flagRed" className="h-3.5 w-3.5 text-flag-red" />
-              <Glyph name="flagGreen" className="h-3.5 w-3.5 text-flag-green" />
+              <Glyph name="flagRed" className="h-4 w-4" />
+            </span>
+            <span
+              className={`flex items-center gap-1.5 px-3 py-2 ${
+                room.flagMode ? 'bg-cocoa-900 text-white' : 'bg-white text-cocoa-700'
+              }`}
+            >
               {t('flag.toggle')}
               {!isPro && (
                 <span className="rounded-full bg-butter-100 px-1.5 py-0.5 text-[10px] text-cocoa-700">
                   {t('flag.proBadge')}
                 </span>
               )}
-            </button>
-          )}
-        </div>
-        <button onClick={akhiri} className="press rounded-md font-medium hover:text-terracotta-600">
-          {t('session.endSession')}
-        </button>
+            </span>
+            <span
+              className={`flex flex-1 items-center justify-start py-2 pl-2 ${
+                room.flagMode ? 'bg-flag-green-deep text-white' : 'bg-flag-green-soft text-flag-green'
+              }`}
+            >
+              <Glyph name="flagGreen" className="h-4 w-4" />
+            </span>
+          </button>
+        )}
       </div>
 
       <div className="flex items-start gap-3">

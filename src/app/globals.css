@@ -24,6 +24,9 @@
   --color-flag-red-soft: #fbe3df;
   --color-flag-green: #2f8f6b;
   --color-flag-green-soft: #dcf0e7;
+  /* Hijau lebih pekat khusus bidang solid berteks putih — --color-flag-green
+     terlalu terang untuk teks putih (kontras < 4.5:1). */
+  --color-flag-green-deep: #256f53;
   /* Varian untuk mark di atas pita cocoa-900. */
   --color-flag-red-on-dark: #ff8a72;
   --color-flag-green-on-dark: #5fd6a8;

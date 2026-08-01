@@ -13,9 +13,9 @@ interface Props {
 }
 
 const DEPTH_CHIP: Record<Question['depth'], string> = {
-  ringan: 'bg-butter-100 text-cocoa-700',
-  sedang: 'bg-terracotta-100 text-terracotta-700',
-  dalam: 'bg-terracotta-500 text-white',
+  ringan: 'bg-terracotta-100 text-terracotta-700',
+  sedang: 'bg-terracotta-400 text-white',
+  dalam: 'bg-terracotta-600 text-white',
 }
 
 function HeartIcon({ filled }: { filled: boolean }) {
@@ -53,12 +53,12 @@ export default function QuestionCard({ question, nomor, favorit, onToggleFavorit
         exit={reduce ? { opacity: 0 } : { rotateY: -90, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 22 }}
         style={{ transformPerspective: 1000 }}
-        className="relative rounded-3xl border border-cream-200 bg-white p-6 shadow-warm-md sm:p-8"
+        className="relative rounded-[32px] border border-cream-200 bg-white p-6 shadow-warm-md sm:p-9"
       >
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cocoa-500">
             {t('common.cardN', { n: nomor })}
-            <span className={`rounded-lg px-2 py-0.5 ${DEPTH_CHIP[question.depth]}`}>
+            <span className={`rounded-full px-2.5 py-0.5 ${DEPTH_CHIP[question.depth]}`}>
               {t(`depth.${question.depth}`)}
             </span>
           </span>
@@ -73,7 +73,7 @@ export default function QuestionCard({ question, nomor, favorit, onToggleFavorit
             <HeartIcon filled={favorit} />
           </motion.button>
         </div>
-        <p className="display-tight mt-5 min-h-24 font-display text-xl font-semibold leading-snug text-cocoa-900 sm:text-3xl">
+        <p className="display-tight mt-5 min-h-28 font-display text-2xl font-bold leading-snug text-cocoa-900 sm:text-4xl">
           {question.text[lang]}
         </p>
       </motion.article>

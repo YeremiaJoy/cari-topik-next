@@ -108,7 +108,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-10 sm:gap-12">
       <section>
-        <h1 className="display-tight font-display text-3xl font-black sm:text-5xl">
+        <h1 className="display-tight font-display text-3xl font-black italic sm:text-5xl">
           {t('dashboard.greeting', { name: user?.name })}
         </h1>
         <p className="mt-3 text-base text-cocoa-500 sm:text-lg">{t('dashboard.subtitle')}</p>
@@ -117,29 +117,37 @@ export default function DashboardPage() {
           initial={reduce ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          whileHover={reduce ? undefined : { y: -4 }}
           className="mt-7"
         >
           <Link
             href="/room/setup"
             onClick={handleNewRoom}
-            className="press relative block overflow-hidden rounded-3xl bg-terracotta-500 p-6 text-white shadow-warm-lg hover:bg-terracotta-600 sm:p-8"
+            className="btn-tactile relative flex items-center gap-4 overflow-hidden rounded-[28px] bg-terracotta-500 p-6 text-white hover:bg-terracotta-600 sm:p-7"
           >
             {/* Kartu dekoratif di sudut */}
-            <div aria-hidden className="pointer-events-none absolute -right-4 -top-6 opacity-25 sm:opacity-40">
+            <div aria-hidden className="pointer-events-none absolute -right-4 -top-6 opacity-20 sm:opacity-30">
               <div className="float-slow h-28 w-20 rounded-2xl border-4 border-white/70 bg-white/10 [--float-rotate:12deg]" />
             </div>
-            <div aria-hidden className="pointer-events-none absolute right-14 -top-2 opacity-15 sm:opacity-25">
-              <div className="h-24 w-16 -rotate-6 rounded-2xl border-4 border-white/70 bg-white/10" />
-            </div>
-            <span className="font-display text-xl font-bold sm:text-3xl">{t('dashboard.newRoom')}</span>
-            <p className="mt-1.5 max-w-md text-terracotta-100">{t('dashboard.newRoomBody')}</p>
+            <span
+              aria-hidden
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-3xl font-black"
+            >
+              +
+            </span>
+            <span className="relative">
+              <span className="block font-display text-xl font-bold sm:text-2xl">
+                {t('dashboard.newRoom')}
+              </span>
+              <span className="mt-1 block max-w-md text-sm text-terracotta-100">
+                {t('dashboard.newRoomBody')}
+              </span>
+            </span>
           </Link>
         </motion.div>
       </section>
 
       <section>
-        <h2 className="font-display text-xl font-bold sm:text-3xl">{t('dashboard.previousRooms')}</h2>
+        <h2 className="font-display text-xl font-bold italic sm:text-3xl">{t('dashboard.previousRooms')}</h2>
 
         {rooms === null ? (
           <RoomSkeleton />
@@ -154,7 +162,7 @@ export default function DashboardPage() {
             <p className="max-w-xs text-sm text-cocoa-500">{t('dashboard.empty')}</p>
             <Link
               href="/room/setup"
-              className="press mt-2 rounded-full bg-terracotta-500 px-6 py-2.5 font-bold text-white shadow-warm-sm hover:bg-terracotta-600"
+              className="btn-tactile mt-2 rounded-full bg-terracotta-500 px-6 py-2.5 font-bold text-white hover:bg-terracotta-600"
             >
               {t('dashboard.emptyCta')}
             </Link>
@@ -201,7 +209,7 @@ export default function DashboardPage() {
                           className={
                             room.status === 'active'
                               ? 'rounded-full bg-terracotta-100 px-3 py-1 text-xs font-bold text-terracotta-700'
-                              : 'rounded-full bg-cream-200 px-3 py-1 text-xs font-bold text-cocoa-700'
+                              : 'rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700'
                           }
                         >
                           {room.status === 'active' ? t('dashboard.continue') : t('dashboard.finished')}
@@ -274,7 +282,7 @@ export default function DashboardPage() {
               <button
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="press mt-6 w-full rounded-full bg-terracotta-500 px-6 py-3 font-bold text-white shadow-warm-md hover:bg-terracotta-600 disabled:opacity-60"
+                className="btn-tactile mt-6 w-full rounded-full bg-terracotta-500 px-6 py-3 font-bold text-white hover:bg-terracotta-600 disabled:opacity-60"
               >
                 {t('dashboard.deleteYes')}
               </button>

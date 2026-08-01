@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none" role="img" aria-label="Three friends laughing together with balloons">
+  <defs>
+    <linearGradient id="frn-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdf1c7"/><stop offset="1" stop-color="#f9e39a"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="320" rx="28" fill="url(#frn-bg)"/>
+  <circle cx="200" cy="150" r="122" fill="#fff8f2" opacity="0.45"/>
+  <!-- balloons -->
+  <g stroke="#241509" stroke-width="4" stroke-linecap="round">
+    <path d="M330 132v70" fill="none"/><ellipse cx="330" cy="96" rx="26" ry="32" fill="#ee5f2c"/>
+    <path d="M306 150v56" fill="none"/><ellipse cx="306" cy="122" rx="20" ry="25" fill="#f9c23c"/>
+  </g>
+  <!-- confetti -->
+  <g><rect x="64" y="60" width="12" height="12" rx="3" fill="#ee5f2c" transform="rotate(20 70 66)"/><circle cx="96" cy="96" r="6" fill="#f47521"/><rect x="120" y="52" width="10" height="10" rx="2" fill="#9d4400" transform="rotate(-18 125 57)"/></g>
+  <!-- ground -->
+  <rect x="40" y="280" width="320" height="16" rx="8" fill="#e6c86a"/>
+  <!-- three friends -->
+  <g stroke="#241509" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M56 284v-34a32 32 0 0 1 64 0v34Z" fill="#ee5f2c"/>
+    <circle cx="88" cy="200" r="28" fill="#7a4a2b"/>
+    <path d="M60 196c0-30 56-30 56 0-4-16-52-16-56 0Z" fill="#2a1a0f"/>
+    <path d="M148 286v-40a34 34 0 0 1 68 0v40Z" fill="#f9c23c"/>
+    <circle cx="182" cy="188" r="30" fill="#ffdcc0"/>
+    <path d="M152 186c0-30 60-30 60 0-6 6-14-4-30-4s-24 10-30 4Z" fill="#3a2a1a"/>
+    <path d="M244 284v-34a32 32 0 0 1 64 0v34Z" fill="#9d4400"/>
+    <circle cx="276" cy="200" r="28" fill="#ffcdaa"/>
+    <path d="M248 200c4-26 56-26 56 0 0 8-8-2-28-2s-28 10-28 2Z" fill="#241509"/>
+  </g>
+  <g fill="#241509">
+    <circle cx="80" cy="202" r="4"/><circle cx="96" cy="202" r="4"/>
+    <circle cx="174" cy="190" r="4.5"/><circle cx="190" cy="190" r="4.5"/>
+    <circle cx="268" cy="202" r="4"/><circle cx="284" cy="202" r="4"/>
+  </g>
+  <g fill="#ff9d7a" opacity="0.7"><circle cx="70" cy="214" r="6"/><circle cx="106" cy="214" r="6"/><circle cx="163" cy="203" r="7"/><circle cx="201" cy="203" r="7"/><circle cx="258" cy="214" r="6"/><circle cx="294" cy="214" r="6"/></g>
+  <g stroke="#241509" stroke-width="5" stroke-linecap="round" fill="none"><path d="M80 214q8 9 16 0"/><path d="M172 204q10 10 20 0"/><path d="M268 214q8 9 16 0"/></g>
+</svg>

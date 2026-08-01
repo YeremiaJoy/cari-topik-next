@@ -96,7 +96,7 @@ export default function ProfilePage() {
       transition={{ duration: 0.4 }}
       className="mx-auto flex max-w-xl flex-col gap-6"
     >
-      <h1 className="display-tight font-display text-3xl font-black sm:text-5xl">
+      <h1 className="display-tight font-display text-3xl font-black italic sm:text-5xl">
         {t('profile.title')}
       </h1>
 
@@ -167,7 +167,7 @@ export default function ProfilePage() {
         {!isPro && (
           <Link
             href="/pricing"
-            className="press mt-5 inline-block rounded-full bg-terracotta-500 px-6 py-2.5 font-bold text-white shadow-warm-sm hover:bg-terracotta-600"
+            className="btn-tactile mt-5 inline-block rounded-full bg-terracotta-500 px-6 py-2.5 font-bold text-white hover:bg-terracotta-600"
           >
             {t('paywall.upgrade')}
           </Link>

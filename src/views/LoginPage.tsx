@@ -79,13 +79,12 @@ export default function LoginPage() {
           <div className="float-slow h-12 w-9 -rotate-12 rounded-lg border-2 border-cream-200 bg-butter-100 shadow-warm-sm [--float-rotate:-12deg]" />
           <div className="float-slow -ml-3 h-12 w-9 rotate-6 rounded-lg border-2 border-terracotta-400 bg-terracotta-500 shadow-warm-sm [--float-rotate:6deg] [animation-delay:1.5s]" />
         </div>
-        <h1 className="display-tight mt-3 font-display text-2xl font-black sm:text-3xl">{t('login.title')}</h1>
+        <h1 className="display-tight mt-3 font-display text-2xl font-black italic sm:text-3xl">{t('login.title')}</h1>
         <p className="mt-3 text-sm text-cocoa-500">{t('login.subtitle')}</p>
         <motion.button
           onClick={handleLogin}
           disabled={busy}
-          whileTap={reduce ? undefined : { scale: 0.97 }}
-          className="press mt-8 flex w-full items-center justify-center gap-3 rounded-full border-2 border-cream-200 bg-cream-50 px-6 py-3.5 font-bold text-cocoa-700 shadow-warm-sm hover:border-terracotta-400 hover:bg-cream-100 disabled:opacity-60"
+          className="btn-tactile-cocoa mt-8 flex w-full items-center justify-center gap-3 rounded-full border-2 border-cream-200 bg-white px-6 py-3.5 font-bold text-cocoa-700 hover:bg-cream-100 disabled:opacity-60"
         >
           <GoogleIcon />
           {busy ? t('login.busy') : t('login.button')}

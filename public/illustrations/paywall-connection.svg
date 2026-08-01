@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none" role="img" aria-label="Two people talking with a locked heart above them">
+  <rect width="400" height="300" rx="28" fill="#f8ecdc"/>
+  <!-- floating locked heart -->
+  <g stroke="#241509" stroke-width="6" stroke-linejoin="round">
+    <path d="M200 40c-11-20-46-17-46 11 0 20 27 34 46 48 19-14 46-28 46-48 0-28-35-31-46-11Z" fill="#f47521"/>
+    <rect x="184" y="86" width="32" height="26" rx="6" fill="#9d4400"/>
+    <path d="M190 86v-8a10 10 0 0 1 20 0v8" fill="none"/>
+  </g>
+  <circle cx="200" cy="99" r="4.5" fill="#fff8f2"/>
+  <!-- two chairs + people -->
+  <g stroke="#241509" stroke-width="6" stroke-linejoin="round">
+    <rect x="60" y="236" width="120" height="20" rx="10" fill="#ffdbca"/>
+    <rect x="220" y="236" width="120" height="20" rx="10" fill="#ffdbca"/>
+    <path d="M78 236v-30a34 34 0 0 1 68 0v30Z" fill="#ee5f2c"/>
+    <circle cx="112" cy="168" r="28" fill="#ffe8d6"/>
+    <path d="M84 166a28 28 0 0 1 56 0Z" fill="#241509"/>
+    <path d="M254 236v-30a34 34 0 0 1 68 0v30Z" fill="#9d4400"/>
+    <circle cx="288" cy="168" r="28" fill="#ffe8d6"/>
+    <path d="M260 168c0-20 56-20 56 0Z" fill="#241509"/>
+  </g>
+  <g fill="#241509"><circle cx="105" cy="170" r="4"/><circle cx="119" cy="170" r="4"/><circle cx="281" cy="170" r="4"/><circle cx="295" cy="170" r="4"/></g>
+</svg>

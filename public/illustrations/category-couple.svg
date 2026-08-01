@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none" role="img" aria-label="A couple sharing a warm moment under a heart">
+  <defs>
+    <linearGradient id="cpl-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe8d6"/><stop offset="1" stop-color="#ffd3b6"/>
+    </linearGradient>
+    <linearGradient id="cpl-heart" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8a4c"/><stop offset="1" stop-color="#ee5f2c"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="320" rx="28" fill="url(#cpl-bg)"/>
+  <circle cx="200" cy="150" r="120" fill="#fff8f2" opacity="0.5"/>
+  <!-- heart with glow -->
+  <g>
+    <path d="M200 66c-13-24-54-20-54 13 0 24 31 40 54 57 23-17 54-33 54-57 0-33-41-37-54-13Z" fill="url(#cpl-heart)"/>
+    <path d="M182 88c-3-9 3-16 11-16" stroke="#fff8f2" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <!-- sofa -->
+  <rect x="70" y="250" width="260" height="40" rx="18" fill="#c98a5e"/>
+  <rect x="70" y="238" width="260" height="26" rx="13" fill="#e0a878"/>
+  <!-- left person -->
+  <g stroke="#241509" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M118 250v-30a34 34 0 0 1 68 0v30Z" fill="#f9c23c"/>
+    <circle cx="152" cy="182" r="30" fill="#ffdcc0"/>
+    <path d="M122 178c0-30 60-30 60 0-6 6-14-4-30-4s-24 10-30 4Z" fill="#3a2a1a"/>
+  </g>
+  <!-- right person -->
+  <g stroke="#241509" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M214 250v-30a34 34 0 0 1 68 0v30Z" fill="#ee5f2c"/>
+    <circle cx="248" cy="182" r="30" fill="#ffcdaa"/>
+    <path d="M218 176c4-26 56-26 60 0 0 8-8-2-30-2s-30 10-30 2Z" fill="#241509"/>
+  </g>
+  <!-- faces -->
+  <g fill="#241509"><circle cx="144" cy="184" r="4"/><circle cx="160" cy="184" r="4"/><circle cx="240" cy="184" r="4"/><circle cx="256" cy="184" r="4"/></g>
+  <g fill="#ff9d7a" opacity="0.7"><circle cx="134" cy="196" r="7"/><circle cx="170" cy="196" r="7"/><circle cx="230" cy="196" r="7"/><circle cx="266" cy="196" r="7"/></g>
+  <g stroke="#241509" stroke-width="5" stroke-linecap="round" fill="none"><path d="M145 198q7 8 15 0"/><path d="M241 198q7 8 15 0"/></g>
+</svg>

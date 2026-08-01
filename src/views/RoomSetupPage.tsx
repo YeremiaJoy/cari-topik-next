@@ -10,19 +10,20 @@ import { appConfig, roomService } from '../services'
 import { PaywallError } from '../services/types'
 import type { Category, Personality } from '../services/types'
 import PaywallModal from '../components/PaywallModal'
+import Glyph, { type GlyphName } from '../components/Glyph'
 
-const KATEGORI: { value: Category; emoji: string }[] = [
-  { value: 'pasangan', emoji: '💘' },
-  { value: 'teman', emoji: '🎈' },
-  { value: 'keluarga', emoji: '🏡' },
+const KATEGORI: { value: Category; icon: GlyphName }[] = [
+  { value: 'pasangan', icon: 'couple' },
+  { value: 'teman', icon: 'friends' },
+  { value: 'keluarga', icon: 'family' },
 ]
-const MODE: { value: 'pair' | 'group'; emoji: string; count: number }[] = [
-  { value: 'pair', emoji: '💬', count: 2 },
-  { value: 'group', emoji: '🎉', count: 3 },
+const MODE: { value: 'pair' | 'group'; icon: GlyphName; count: number }[] = [
+  { value: 'pair', icon: 'pair', count: 2 },
+  { value: 'group', icon: 'group', count: 3 },
 ]
-const KEPRIBADIAN: { value: Personality; emoji: string }[] = [
-  { value: 'introvert', emoji: '🌙' },
-  { value: 'extrovert', emoji: '⚡' },
+const KEPRIBADIAN: { value: Personality; icon: GlyphName }[] = [
+  { value: 'introvert', icon: 'introvert' },
+  { value: 'extrovert', icon: 'extrovert' },
 ]
 
 export default function RoomSetupPage() {
@@ -103,11 +104,11 @@ export default function RoomSetupPage() {
       <AnimatePresence mode="wait">
         {step === 1 && (
           <motion.section key="langkah-1" {...stepVariants} transition={{ duration: 0.3 }}>
-            <h1 className="display-tight font-display text-2xl font-black sm:text-4xl">
+            <h1 className="display-tight font-display text-2xl font-black italic sm:text-4xl">
               {t('setup.categoryTitle')}
             </h1>
             <div className="mt-6 grid gap-3">
-              {KATEGORI.map(({ value, emoji }) => (
+              {KATEGORI.map(({ value, icon }) => (
                 <button
                   key={value}
                   onClick={() => setCategory(value)}
@@ -119,12 +120,11 @@ export default function RoomSetupPage() {
                   }`}
                 >
                   <span
-                    aria-hidden
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl transition-transform ${
-                      category === value ? 'scale-110 bg-white' : 'bg-cream-100'
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-transform ${
+                      category === value ? 'scale-110 bg-white text-terracotta-500' : 'bg-cream-100 text-cocoa-500'
                     }`}
                   >
-                    {emoji}
+                    <Glyph name={icon} className="h-6 w-6" />
                   </span>
                   <span className="flex-1">
                     <span className="font-bold">{t(`category.${value}.label`)}</span>
@@ -139,7 +139,7 @@ export default function RoomSetupPage() {
 
             <h2 className="mt-8 font-display text-lg font-bold sm:text-xl">{t('setup.modeTitle')}</h2>
             <div className="mt-4 grid gap-3">
-              {MODE.map(({ value, emoji, count }) => {
+              {MODE.map(({ value, icon, count }) => {
                 const active = (participantCount === 2) === (value === 'pair')
                 return (
                   <button
@@ -153,12 +153,11 @@ export default function RoomSetupPage() {
                     }`}
                   >
                     <span
-                      aria-hidden
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl transition-transform ${
-                        active ? 'scale-110 bg-white' : 'bg-cream-100'
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-transform ${
+                        active ? 'scale-110 bg-white text-terracotta-500' : 'bg-cream-100 text-cocoa-500'
                       }`}
                     >
-                      {emoji}
+                      <Glyph name={icon} className="h-6 w-6" />
                     </span>
                     <span className="flex-1">
                       <span className="flex items-center gap-2 font-bold">
@@ -181,7 +180,7 @@ export default function RoomSetupPage() {
 
             <button
               onClick={nextFromStep1}
-              className="press mt-10 w-full rounded-full bg-terracotta-500 px-6 py-3.5 font-bold text-white shadow-warm-md hover:bg-terracotta-600"
+              className="btn-tactile mt-10 w-full rounded-full bg-terracotta-500 px-6 py-3.5 font-bold text-white hover:bg-terracotta-600"
             >
               {t('setup.next')}
             </button>
@@ -189,8 +188,13 @@ export default function RoomSetupPage() {
         )}
 
         {step === 2 && (
-          <motion.section key="langkah-2" {...stepVariants} transition={{ duration: 0.3 }}>
-            <h1 className="display-tight font-display text-2xl font-black sm:text-4xl">
+          <motion.section
+            key="langkah-2"
+            {...stepVariants}
+            transition={{ duration: 0.3 }}
+            className="confetti-bg -mx-2 rounded-[28px] px-2 py-4 sm:-mx-4 sm:px-4"
+          >
+            <h1 className="display-tight font-display text-2xl font-black italic sm:text-4xl">
               {t('setup.personalityTitle')}
             </h1>
             <p className="mt-2 text-cocoa-500">{t('setup.personalitySubtitle')}</p>
@@ -198,7 +202,7 @@ export default function RoomSetupPage() {
               <div key={idx} className="mt-6">
                 <h2 className="font-bold">{t('setup.participantN', { n: idx + 1 })}</h2>
                 <div className="mt-3 grid grid-cols-2 gap-3">
-                  {KEPRIBADIAN.map(({ value, emoji }) => (
+                  {KEPRIBADIAN.map(({ value, icon }) => (
                     <button
                       key={value}
                       onClick={() =>
@@ -213,24 +217,31 @@ export default function RoomSetupPage() {
                           : 'border-cream-200 bg-white hover:border-terracotta-400'
                       }`}
                     >
-                      <span aria-hidden className="text-xl">{emoji}</span>
-                      <span className="mt-1 block font-bold">{t(`personality.${value}.label`)}</span>
+                      <span
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                          personalities[idx] === value ? 'bg-white text-terracotta-500' : 'bg-cream-100 text-cocoa-500'
+                        }`}
+                      >
+                        <Glyph name={icon} className="h-5 w-5" />
+                      </span>
+                      <span className="mt-2 block font-bold">{t(`personality.${value}.label`)}</span>
                       <p className="text-sm text-cocoa-500">{t(`personality.${value}.desc`)}</p>
                     </button>
                   ))}
                 </div>
               </div>
             ))}
-            <div className="mt-10 flex gap-3">
+            <p className="mt-6 text-center text-sm text-cocoa-500">{t('setup.personalityTip')}</p>
+            <div className="mt-4 flex gap-3">
               <button
                 onClick={() => setStep(1)}
-                className="press flex-1 rounded-full border-2 border-cream-200 px-6 py-3 font-bold text-cocoa-700 hover:bg-cream-100"
+                className="press flex-1 rounded-full border-2 border-cream-200 bg-white px-6 py-3 font-bold text-cocoa-700 hover:bg-cream-100"
               >
                 {t('setup.back')}
               </button>
               <button
                 onClick={() => setStep(3)}
-                className="press flex-1 rounded-full bg-terracotta-500 px-6 py-3 font-bold text-white shadow-warm-md hover:bg-terracotta-600"
+                className="btn-tactile flex-1 rounded-full bg-terracotta-500 px-6 py-3 font-bold text-white hover:bg-terracotta-600"
               >
                 {t('setup.next')}
               </button>
@@ -239,9 +250,14 @@ export default function RoomSetupPage() {
         )}
 
         {step === 3 && (
-          <motion.section key="langkah-3" {...stepVariants} transition={{ duration: 0.3 }} className="text-center">
+          <motion.section
+            key="langkah-3"
+            {...stepVariants}
+            transition={{ duration: 0.3 }}
+            className="confetti-bg -mx-2 rounded-[28px] px-2 py-6 text-center sm:-mx-4 sm:px-4"
+          >
             <span aria-hidden className="text-4xl">🎉</span>
-            <h1 className="display-tight mt-2 font-display text-2xl font-black sm:text-4xl">
+            <h1 className="display-tight mt-2 font-display text-2xl font-black italic sm:text-4xl">
               {t('setup.readyTitle')}
             </h1>
             {/* Kartu ringkasan gaya tiket */}
@@ -249,8 +265,8 @@ export default function RoomSetupPage() {
               <dl className="flex flex-col gap-3 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-cocoa-500">{t('setup.summaryCategory')}</dt>
-                  <dd className="font-bold">
-                    {KATEGORI.find((k) => k.value === category)?.emoji}{' '}
+                  <dd className="flex items-center gap-1.5 font-bold text-terracotta-600">
+                    <Glyph name={KATEGORI.find((k) => k.value === category)!.icon} className="h-4 w-4" />
                     {t(`category.${category}.label`)}
                   </dd>
                 </div>
@@ -277,14 +293,14 @@ export default function RoomSetupPage() {
             <div className="mt-10 flex gap-3">
               <button
                 onClick={() => setStep(participantCount === 2 ? 2 : 1)}
-                className="press flex-1 rounded-full border-2 border-cream-200 px-6 py-3 font-bold text-cocoa-700 hover:bg-cream-100"
+                className="press flex-1 rounded-full border-2 border-cream-200 bg-white px-6 py-3 font-bold text-cocoa-700 hover:bg-cream-100"
               >
                 {t('setup.back')}
               </button>
               <button
                 onClick={handleStart}
                 disabled={busy}
-                className="press flex-1 rounded-full bg-terracotta-500 px-6 py-3 font-bold text-white shadow-warm-md hover:bg-terracotta-600 disabled:opacity-60"
+                className="btn-tactile flex-1 rounded-full bg-terracotta-500 px-6 py-3 font-bold text-white hover:bg-terracotta-600 disabled:opacity-60"
               >
                 {busy ? t('setup.starting') : t('setup.start')}
               </button>

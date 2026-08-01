@@ -13,7 +13,7 @@ export const ROOM_DELETE_COOLDOWN_MS = 6 * 60 * 60 * 1000
 
 /** Harga Pro per tahun. Ubah dua angka ini untuk atur promo. */
 export const PRO_PRICE = 50000
-export const PRO_PRICE_AFTER_DISCOUNT = 19000
+export const PRO_PRICE_AFTER_DISCOUNT = 25000
 export const PRO_DISCOUNT_PERCENT = Math.round((1 - PRO_PRICE_AFTER_DISCOUNT / PRO_PRICE) * 100)
 export const formatRupiah = (n: number) => `Rp ${n.toLocaleString('id-ID')}`
 export const PRO_PRICE_LABEL = formatRupiah(PRO_PRICE_AFTER_DISCOUNT)

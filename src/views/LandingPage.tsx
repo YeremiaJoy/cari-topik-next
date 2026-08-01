@@ -9,18 +9,19 @@ import { usePwaInstall } from '../hooks/usePwaInstall'
 import { useAuth } from '../context/AuthContext'
 import { resolveInstallGate } from '../lib/installGate'
 import PaywallModal from '../components/PaywallModal'
+import Illustration from '../components/Illustration'
 
 const SAMPLE_CARDS = [
   { key: 'landing.sample1', depth: 'ringan', rotate: -8, chip: 'bg-butter-100 text-cocoa-700' },
-  { key: 'landing.sample2', depth: 'sedang', rotate: 3, chip: 'bg-terracotta-100 text-terracotta-700' },
-  { key: 'landing.sample3', depth: 'dalam', rotate: 10, chip: 'bg-terracotta-500 text-white' },
+  { key: 'landing.sample2', depth: 'sedang', rotate: 0, chip: 'bg-terracotta-100 text-terracotta-700' },
+  { key: 'landing.sample3', depth: 'dalam', rotate: 8, chip: 'bg-terracotta-500 text-white' },
 ] as const
 
-/** Foto kategori — komposisi miring & offset mengikuti bahasa kartu. */
+/** Kategori — kartu foto diganti slot ilustrasi vektor. */
 const FOR_WHO = [
-  { cat: 'pasangan', src: '/images/couple-sunset.jpg', emoji: '💘', tilt: 'sm:-rotate-2' },
-  { cat: 'teman', src: '/images/friends-together.jpg', emoji: '🎈', tilt: 'sm:translate-y-6 sm:rotate-1' },
-  { cat: 'keluarga', src: '/images/family-home.jpg', emoji: '🏡', tilt: 'sm:-rotate-1' },
+  { cat: 'pasangan', illo: 'category-couple', emoji: '💘' },
+  { cat: 'teman', illo: 'category-friends', emoji: '🎈' },
+  { cat: 'keluarga', illo: 'category-family', emoji: '🏡' },
 ] as const
 
 const STEPS = [1, 2, 3] as const
@@ -56,73 +57,73 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col gap-16 py-4 sm:gap-24 sm:py-8">
-      {/* Hero — split asimetris: teks kiri, foto obrolan kanan */}
+      {/* Hero — terpusat, ilustrasi di bawah headline */}
       <motion.section
         initial={reduce ? false : { opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]"
+        className="mx-auto flex max-w-2xl flex-col items-center text-center"
       >
-        <div className="max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-terracotta-200 bg-terracotta-100/60 px-3 py-1 text-xs font-bold text-terracotta-700">
-            <span aria-hidden>🃏</span> {t('landing.badge')}
-          </span>
-          <h1 className="display-tight mt-5 font-display text-4xl font-black sm:text-6xl">
-            {t('landing.heroTitlePrefix')}{' '}
-            <em className="text-terracotta-500">{t('landing.heroTitleAccent')}</em>
-          </h1>
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-cocoa-500 sm:text-lg">
-            {t('landing.heroBody')}
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link
-              href={ctaTo}
-              className="press inline-block rounded-full bg-terracotta-500 px-8 py-3.5 text-base font-bold text-white shadow-warm-md hover:bg-terracotta-600 hover:shadow-warm-lg sm:text-lg"
-            >
-              {ctaLabel}
-            </Link>
-            <Link
-              href="/pricing"
-              className="press rounded-md font-semibold text-cocoa-700 underline decoration-terracotta-400 decoration-2 underline-offset-4 hover:text-terracotta-600"
-            >
-              {t('landing.ctaSecondary')}
-            </Link>
-          </div>
-        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-terracotta-200 bg-terracotta-100/60 px-3 py-1 text-xs font-bold text-terracotta-700">
+          <span aria-hidden>🃏</span> {t('landing.badge')}
+        </span>
+        <h1 className="display-tight mt-5 font-display text-4xl font-black italic sm:text-6xl">
+          {t('landing.heroTitlePrefix')}{' '}
+          <span className="not-italic text-terracotta-500">{t('landing.heroTitleAccent')}</span>
+        </h1>
 
         <motion.div
-          initial={reduce ? false : { opacity: 0, scale: 0.96, rotate: 0 }}
-          animate={{ opacity: 1, scale: 1, rotate: 2 }}
-          transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
-          className="mx-auto w-full max-w-md lg:max-w-none"
+          initial={reduce ? false : { opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.15, duration: 0.6, ease: 'easeOut' }}
+          className="mt-8 w-full max-w-lg"
         >
-          <img
-            src="/images/hero-conversation.jpg"
+          <Illustration
+            name="hero-conversation"
+            ext="jpg"
             alt={t('landing.heroImageAlt')}
-            fetchPriority="high"
-            className="aspect-[4/3] w-full rounded-3xl border border-cream-200 object-cover shadow-warm-lg"
+            emoji="🗣️"
+            fit="cover"
+            className="aspect-[3/2] w-full"
           />
         </motion.div>
+
+        <p className="mt-8 max-w-xl text-base leading-relaxed text-cocoa-500 sm:text-lg">
+          {t('landing.heroBody')}
+        </p>
+        <div className="mt-8 flex flex-col items-center gap-4">
+          <Link
+            href={ctaTo}
+            className="btn-tactile inline-block rounded-full bg-terracotta-500 px-10 py-4 text-base font-bold text-white hover:bg-terracotta-600 sm:text-lg"
+          >
+            {ctaLabel}
+          </Link>
+          <Link
+            href="/pricing"
+            className="press rounded-md font-semibold text-cocoa-700 underline decoration-terracotta-400 decoration-2 underline-offset-4 hover:text-terracotta-600"
+          >
+            {t('landing.ctaSecondary')}
+          </Link>
+        </div>
       </motion.section>
 
-      {/* Kipas kartu contoh — ringan → dalam */}
+      {/* Kartu contoh — ringan → dalam */}
       <section aria-label={t('landing.fanLabel')} className="flex justify-center px-2">
-        <div className="flex items-center pt-4 pb-8">
+        <div className="flex items-start justify-center gap-3 pt-4 pb-4 sm:gap-4">
           {SAMPLE_CARDS.map(({ key, depth, rotate, chip }, i) => (
             <motion.div
               key={key}
-              initial={reduce ? false : { opacity: 0, y: 40, rotate: 0 }}
-              animate={{ opacity: 1, y: i === 1 ? -12 : 0, rotate }}
-              transition={{ delay: 0.25 + i * 0.15, type: 'spring', stiffness: 120, damping: 14 }}
-              whileHover={reduce ? undefined : { y: -24, rotate: 0, scale: 1.05, zIndex: 10 }}
-              className={`w-40 shrink-0 rounded-3xl border border-cream-200 bg-white p-4 shadow-warm-md sm:w-56 sm:p-6 ${
-                i > 0 ? '-ml-10 sm:-ml-12' : ''
-              }`}
+              initial={reduce ? false : { opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: i === 1 ? -12 : 0, rotate }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ delay: 0.1 + i * 0.12, type: 'spring', stiffness: 120, damping: 14 }}
+              whileHover={reduce ? undefined : { y: -18, rotate: 0, scale: 1.05, zIndex: 10 }}
+              className="w-28 shrink-0 rounded-2xl border border-cream-200 bg-white p-3 shadow-warm-md sm:w-44 sm:rounded-3xl sm:p-5"
             >
               <span className={`inline-block rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider sm:text-xs ${chip}`}>
                 {t(`depth.${depth}`)}
               </span>
-              <p className="mt-3 font-display text-sm leading-snug text-cocoa-900 sm:text-lg">
+              <p className="mt-2.5 font-display text-xs leading-snug text-cocoa-900 sm:mt-3 sm:text-base">
                 {t(key)}
               </p>
             </motion.div>
@@ -130,31 +131,28 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Untuk siapa — trio foto kategori, miring & offset */}
+      {/* Untuk siapa — trio kartu kategori dengan ilustrasi */}
       <section className="mx-auto w-full max-w-3xl">
-        <h2 className="display-tight font-display text-2xl font-bold sm:text-4xl">
+        <h2 className="display-tight text-center font-display text-2xl font-bold sm:text-4xl">
           {t('landing.forWhoTitle')}
         </h2>
-        {/* Mobile: carousel geser penuh-layar; ≥sm: grid offset seperti semula */}
-        <div className="-mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0">
-          {FOR_WHO.map(({ cat, src, emoji, tilt }, i) => (
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+          {FOR_WHO.map(({ cat, illo, emoji }, i) => (
             <motion.figure
               key={cat}
               initial={reduce ? false : { opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ delay: i * 0.12, duration: 0.45 }}
-              className={`w-[72%] shrink-0 snap-center sm:w-auto sm:shrink ${tilt}`}
+              className="overflow-hidden rounded-3xl border border-cream-200 bg-white p-4 text-center shadow-warm-md"
             >
-              <img
-                src={src}
+              <Illustration
+                name={illo}
                 alt={t(`landing.forWhoAlt.${cat}`)}
-                loading="lazy"
-                className={`aspect-[4/5] w-full rounded-3xl border border-cream-200 object-cover shadow-warm-md ${
-                  i === 1 ? 'sm:aspect-[3/4]' : ''
-                }`}
+                emoji={emoji}
+                className="aspect-[5/4] w-full"
               />
-              <figcaption className="mt-3 px-1">
+              <figcaption className="mt-3">
                 <p className="font-bold text-cocoa-900">
                   <span aria-hidden>{emoji}</span> {t(`category.${cat}.label`)}
                 </p>
@@ -167,7 +165,7 @@ export default function LandingPage() {
 
       {/* Cara main — stiker miring, offset */}
       <section className="mx-auto w-full max-w-3xl">
-        <h2 className="display-tight font-display text-2xl font-bold sm:text-4xl">
+        <h2 className="display-tight text-center font-display text-2xl font-bold sm:text-4xl">
           {t('landing.howTitle')}
         </h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-3 sm:gap-6">
@@ -198,7 +196,7 @@ export default function LandingPage() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-40px' }}
         transition={{ duration: 0.5 }}
-        className="mx-auto grid w-full max-w-3xl items-center gap-8 rounded-3xl border border-terracotta-200 bg-terracotta-100/60 p-6 sm:grid-cols-[1fr_auto] sm:p-10"
+        className="mx-auto grid w-full max-w-3xl items-center gap-8 rounded-[32px] border border-terracotta-200 bg-terracotta-100/60 p-6 sm:grid-cols-[1fr_auto] sm:p-10"
       >
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-cocoa-900 px-3 py-1 text-xs font-bold uppercase tracking-wider text-cream-50">
@@ -212,7 +210,7 @@ export default function LandingPage() {
             <button
               onClick={handleInstall}
               disabled={installed}
-              className="press inline-flex items-center gap-2 rounded-full bg-cocoa-900 px-6 py-3 font-bold text-cream-50 shadow-warm-md hover:bg-cocoa-700 disabled:opacity-60"
+              className="btn-tactile-cocoa inline-flex items-center gap-2 rounded-full bg-cocoa-900 px-6 py-3 font-bold text-cream-50 hover:bg-cocoa-700 disabled:opacity-60"
             >
               <span aria-hidden>⬇</span>
               {installed ? t('landing.installedLabel') : t('landing.installCta')}
@@ -252,16 +250,9 @@ export default function LandingPage() {
         </div>
       </motion.section>
 
-      {/* Ajakan terakhir — foto senja + lapisan cocoa agar teks tetap kontras */}
-      <section className="relative overflow-hidden rounded-3xl bg-cocoa-900 px-6 py-12 text-center shadow-warm-lg sm:px-10 sm:py-16">
-        <img
-          src="/images/gathering-golden.jpg"
-          alt=""
-          aria-hidden
-          loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div aria-hidden className="absolute inset-0 bg-cocoa-900/80" />
+      {/* Ajakan terakhir */}
+      <section className="relative overflow-hidden rounded-[32px] bg-cocoa-900 px-6 py-12 text-center shadow-warm-lg sm:px-10 sm:py-16">
+        <div aria-hidden className="confetti-bg absolute inset-0 opacity-30" />
         <div className="relative">
           <h2 className="display-tight font-display text-2xl font-bold text-cream-50 sm:text-4xl">
             {t('landing.finalTitle')}
@@ -269,7 +260,7 @@ export default function LandingPage() {
           <p className="mx-auto mt-3 max-w-md text-cream-200">{t('landing.finalBody')}</p>
           <Link
             href={ctaTo}
-            className="press mt-8 inline-block rounded-full bg-terracotta-500 px-8 py-3.5 text-base font-bold text-white shadow-warm-md hover:bg-terracotta-400 sm:text-lg"
+            className="btn-tactile mt-8 inline-block rounded-full bg-terracotta-500 px-10 py-4 text-base font-bold text-white hover:bg-terracotta-400 sm:text-lg"
           >
             {ctaLabel}
           </Link>

@@ -37,13 +37,13 @@ describe('normalized account catalog helpers', () => {
           personalized_deck: false,
           offline_support: false,
         },
-        { price: 50000, price_after_discount: 19000 },
+        { price: 50000, price_after_discount: 25000 },
       ),
     ).toMatchObject({
       freeMaxParticipants: 2,
       freeMaxQuestions: 5,
       freeMaxRooms: 1,
-      proPriceAfterDiscount: 19000,
+      proPriceAfterDiscount: 25000,
     })
   })
 

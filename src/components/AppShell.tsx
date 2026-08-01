@@ -26,6 +26,70 @@ function LogoMark({ className }: { className?: string }) {
   )
 }
 
+function HomeIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" fill={filled ? 'currentColor' : 'none'} />
+    </svg>
+  )
+}
+
+function PlusRoomIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <path d="M12 8v8M8 12h8" stroke={filled ? 'var(--color-cream-50)' : 'currentColor'} />
+    </svg>
+  )
+}
+
+function UserIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+  )
+}
+
+/** Tab bar bawah — pola aplikasi untuk pengguna login di layar mobile. */
+function BottomTabBar() {
+  const { t } = useTranslation()
+  const pathname = usePathname()
+  const tabs = [
+    { href: '/room', label: t('nav.tabHome'), Icon: HomeIcon, exact: true },
+    { href: '/room/setup', label: t('nav.tabRoom'), Icon: PlusRoomIcon, exact: false },
+    { href: '/profile', label: t('nav.profile'), Icon: UserIcon, exact: false },
+  ] as const
+  return (
+    <nav
+      aria-label={t('nav.tabBar')}
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-cream-200 bg-cream-50/95 backdrop-blur-md sm:hidden"
+    >
+      <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)]">
+        {tabs.map(({ href, label, Icon, exact }) => {
+          const isActive = exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`)
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-label={label}
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-bold transition-colors ${
+                isActive ? 'text-terracotta-600' : 'text-cocoa-500'
+              }`}
+            >
+              <Icon filled={isActive} />
+              <span>{label}</span>
+            </Link>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}
+
 function MenuIcon({ open }: { open: boolean }) {
   return (
     <svg
@@ -127,7 +191,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             className="press flex items-center gap-2 rounded-md font-display text-xl font-bold text-cocoa-900 sm:text-2xl"
           >
             <LogoMark className="h-7 w-7 sm:h-8 sm:w-8" />
-            <span>
+            <span className="italic">
               Cari<span className="text-terracotta-500">Topik</span>
             </span>
           </Link>
@@ -165,7 +229,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             ) : (
               <Link
                 href="/login"
-                className="press rounded-full bg-terracotta-500 px-4 py-2 font-bold text-white shadow-warm-sm hover:bg-terracotta-600 hover:shadow-warm-md"
+                className="btn-tactile rounded-full bg-terracotta-500 px-4 py-2 font-bold text-white hover:bg-terracotta-600"
               >
                 {t('nav.login')}
               </Link>
@@ -191,7 +255,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             ) : (
               <Link
                 href="/login"
-                className="press rounded-full bg-terracotta-500 px-3.5 py-1.5 text-sm font-bold text-white shadow-warm-sm hover:bg-terracotta-600"
+                className="btn-tactile rounded-full bg-terracotta-500 px-3.5 py-1.5 text-sm font-bold text-white hover:bg-terracotta-600"
               >
                 {t('nav.login')}
               </Link>
@@ -267,9 +331,17 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+      <main
+        className={`mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6 sm:py-10 ${
+          user ? 'pb-24 sm:pb-10' : ''
+        }`}
+      >
+        {children}
+      </main>
 
-      <footer className="mt-12 border-t border-cream-200/70">
+      {user && <BottomTabBar />}
+
+      <footer className={`mt-12 border-t border-cream-200/70 ${user ? 'pb-20 sm:pb-0' : ''}`}>
         <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-8 text-sm text-cocoa-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="flex items-center gap-2">
             <LogoMark className="h-5 w-5" />

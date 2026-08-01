@@ -28,8 +28,8 @@ async function main() {
   const questionSeedSql = (await readFile(seedPath, 'utf8'))
     .replace('insert into public.questions', 'insert into seed_questions')
     .replace(
-      '(id, text_id, text_en, category, depth, bias, for_group)',
-      '(question_code, text_id, text_en, category, depth, bias, for_group)',
+      '(id, text_id, text_en, category, depth, bias, for_group, type)',
+      '(question_code, text_id, text_en, category, depth, bias, for_group, type)',
     )
     .replace('on conflict (id)', 'on conflict (question_code)')
   const pool = new Pool({ connectionString })
@@ -98,12 +98,13 @@ async function main() {
         category text not null,
         depth question_depth not null,
         bias question_bias not null,
-        for_group boolean not null default false
+        for_group boolean not null default false,
+        type question_type not null default 'question'
       ) on commit drop;
     `)
     await pool.query(questionSeedSql)
     await pool.query(`
-      insert into questions (question_code, text_id, text_en, category_id, depth, bias, for_group)
+      insert into questions (question_code, text_id, text_en, category_id, depth, bias, for_group, type)
       select
         sq.question_code,
         sq.text_id,
@@ -111,7 +112,8 @@ async function main() {
         qc.id,
         sq.depth,
         sq.bias,
-        sq.for_group
+        sq.for_group,
+        sq.type
       from seed_questions sq
       join question_category qc on qc.name = sq.category
       on conflict (question_code) do update set
@@ -120,7 +122,8 @@ async function main() {
         category_id = excluded.category_id,
         depth = excluded.depth,
         bias = excluded.bias,
-        for_group = excluded.for_group;
+        for_group = excluded.for_group,
+        type = excluded.type;
     `)
     await pool.query('commit')
     console.log('Seed completed')

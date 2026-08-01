@@ -11,7 +11,7 @@ import Illustration from './Illustration'
 
 interface Props {
   open: boolean
-  reason: 'participants' | 'questions' | 'rooms' | 'install'
+  reason: 'participants' | 'questions' | 'rooms' | 'install' | 'flagMode'
   /** Untuk 'questions': kapan kuota kartu terbuka lagi (ISO). */
   resetAt?: string
   onClose: () => void

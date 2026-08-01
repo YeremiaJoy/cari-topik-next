@@ -5,11 +5,15 @@ import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '../context/AuthContext'
 import { questionService, roomService } from '../services'
 import { PaywallError } from '../services/types'
-import type { Room } from '../services/types'
+import type { Room, FlagVote, PaywallReason } from '../services/types'
+import { currentCardId } from '../lib/session'
 import QuestionCard from '../components/QuestionCard'
+import FlagCard from '../components/FlagCard'
 import PaywallModal from '../components/PaywallModal'
+import Glyph from '../components/Glyph'
 import { useLang } from '../i18n/useLang'
 
 function SessionSkeleton() {
@@ -31,11 +35,14 @@ export default function SessionPage() {
   const reduce = useReducedMotion()
   const { t } = useTranslation()
   const { lang } = useLang()
+  const { user } = useAuth()
   const [room, setRoom] = useState<Room | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [paywall, setPaywall] = useState(false)
   const [resetAt, setResetAt] = useState<string | undefined>()
   const [advancing, setAdvancing] = useState(false)
+  const [paywallReason, setPaywallReason] = useState<PaywallReason>('questions')
+  const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -50,11 +57,17 @@ export default function SessionPage() {
     if (
       room &&
       room.status === 'active' &&
-      !questionService.getById(room.deck[room.currentIndex])
+      !questionService.getById(currentCardId(room) ?? '')
     ) {
       router.replace('/room')
     }
   }, [room, router])
+
+  useEffect(() => {
+    if (!toast) return
+    const id = setTimeout(() => setToast(null), 3000)
+    return () => clearTimeout(id)
+  }, [toast])
 
   if (!room) return <SessionSkeleton />
 
@@ -62,7 +75,7 @@ export default function SessionPage() {
     const favorit = room.favorites
       .map((qid) => questionService.getById(qid))
       .filter((q) => q !== undefined)
-    const count = room.currentIndex + 1
+    const count = room.currentIndex + room.flagIndex + 1
     const minutes = room.endedAt
       ? Math.max(0, Math.round((Date.parse(room.endedAt) - Date.parse(room.createdAt)) / 60000))
       : 0
@@ -141,17 +154,28 @@ export default function SessionPage() {
     )
   }
 
-  const question = questionService.getById(room.deck[room.currentIndex])
+  const question = questionService.getById(currentCardId(room) ?? '')
   if (!question) return <SessionSkeleton />
+
+  const isPro = user?.plan === 'pro'
+  const showFlagToggle =
+    room.setup.category === 'pasangan' &&
+    room.setup.participantCount === 2 &&
+    room.flagReserve.length > 0
 
   const advance = async () => {
     if (advancing) return
     setAdvancing(true)
     try {
-      setRoom(await roomService.advanceCard(room.id))
+      const wasFlagMode = room.flagMode
+      const next = await roomService.advanceCard(room.id)
+      setRoom(next)
+      // Server mematikan flagMode saat reserve habis — tidak perlu field khusus.
+      if (wasFlagMode && !next.flagMode) setToast(t('flag.exhausted'))
     } catch (err) {
       if (err instanceof PaywallError) {
         setResetAt(err.resetAt)
+        setPaywallReason(err.reason)
         setPaywall(true)
       } else throw err
     } finally {
@@ -167,13 +191,57 @@ export default function SessionPage() {
     setRoom(await roomService.endSession(room.id))
   }
 
+  const toggleFlagMode = async () => {
+    if (!isPro) {
+      setPaywallReason('flagMode')
+      setPaywall(true)
+      return
+    }
+    try {
+      const next = await roomService.setFlagMode(room.id, !room.flagMode)
+      setRoom(next)
+      setToast(next.flagMode ? t('flag.on') : t('flag.off'))
+    } catch (err) {
+      if (err instanceof PaywallError) {
+        setPaywallReason('flagMode')
+        setPaywall(true)
+      } else throw err
+    }
+  }
+
+  const saveVotes = async (p1: FlagVote, p2: FlagVote) => {
+    await roomService.saveFlagVotes(room.id, question.id, { p1, p2 })
+  }
+
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
       <div className="flex items-center justify-between text-sm text-cocoa-500">
-        <span className="font-bold tabular-nums">{t('session.cardIndex', { n: room.currentIndex + 1 })}</span>
+        <span className="font-bold tabular-nums">
+          {t('session.cardIndex', { n: room.currentIndex + room.flagIndex + 1 })}
+        </span>
         <button onClick={akhiri} className="press rounded-md font-medium hover:text-terracotta-600">
           {t('session.endSession')}
         </button>
+        {showFlagToggle && (
+          <button
+            onClick={toggleFlagMode}
+            aria-pressed={room.flagMode}
+            className={`press flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-xs font-bold ${
+              room.flagMode
+                ? 'border-terracotta-500 bg-terracotta-100 text-terracotta-700'
+                : 'border-cream-200 bg-white text-cocoa-500'
+            }`}
+          >
+            <Glyph name="flagRed" className="h-3.5 w-3.5 text-flag-red" />
+            <Glyph name="flagGreen" className="h-3.5 w-3.5 text-flag-green" />
+            {t('flag.toggle')}
+            {!isPro && (
+              <span className="rounded-full bg-butter-100 px-1.5 py-0.5 text-[10px] text-cocoa-700">
+                {t('flag.proBadge')}
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
       <div className="flex items-start gap-3">
@@ -185,13 +253,24 @@ export default function SessionPage() {
         </div>
         <div className="w-full">
           <AnimatePresence mode="wait">
-            <QuestionCard
-              key={question.id}
-              question={question}
-              nomor={room.currentIndex + 1}
-              favorit={room.favorites.includes(question.id)}
-              onToggleFavorit={toggleFavorit}
-            />
+            {question.type === 'flag' ? (
+              <FlagCard
+                key={question.id}
+                question={question}
+                nomor={room.currentIndex + room.flagIndex + 1}
+                favorit={room.favorites.includes(question.id)}
+                onToggleFavorit={toggleFavorit}
+                onVoted={saveVotes}
+              />
+            ) : (
+              <QuestionCard
+                key={question.id}
+                question={question}
+                nomor={room.currentIndex + room.flagIndex + 1}
+                favorit={room.favorites.includes(question.id)}
+                onToggleFavorit={toggleFavorit}
+              />
+            )}
           </AnimatePresence>
         </div>
       </div>
@@ -213,7 +292,13 @@ export default function SessionPage() {
         </button>
       </div>
 
-      <PaywallModal open={paywall} reason="questions" resetAt={resetAt} onClose={() => setPaywall(false)} />
+      {toast && (
+        <p role="status" className="rounded-2xl bg-cocoa-900 px-4 py-2.5 text-center text-sm font-semibold text-white">
+          {toast}
+        </p>
+      )}
+
+      <PaywallModal open={paywall} reason={paywallReason} resetAt={resetAt} onClose={() => setPaywall(false)} />
     </div>
   )
 }

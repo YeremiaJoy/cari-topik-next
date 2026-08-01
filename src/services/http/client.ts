@@ -35,5 +35,6 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   if (code === 'paywall:participants') throw new PaywallError('participants')
   if (code === 'paywall:rooms') throw new PaywallError('rooms')
   if (code === 'paywall:questions') throw new PaywallError('questions', body.resetAt)
+  if (code === 'paywall:flagMode') throw new PaywallError('flagMode')
   throw new ApiError(res.status, code, body.message ?? res.statusText)
 }

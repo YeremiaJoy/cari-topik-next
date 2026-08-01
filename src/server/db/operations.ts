@@ -9,6 +9,7 @@ import {
   type Category,
   type Depth,
   type Bias,
+  type FlagVote,
   type Personality,
   type Plan,
   type Role,
@@ -883,5 +884,62 @@ export async function finalizeSoftDeleteUser(userId: string) {
       .set({ ended_at: sql`now()`, updated_at: sql`now()`, deleted_at: sql`now()` })
       .where(and(eq(userPlans.user_id, userId), isNull(userPlans.deleted_at)))
     await tx.insert(userLogs).values({ user_id: userId, status: deletionStatusSequence[1] })
+  })
+}
+
+export async function setRoomFlagMode(
+  user: User,
+  roomId: string,
+  enabled: boolean,
+): Promise<RoomRow> {
+  requireUuid(roomId, 'room_not_found', 'Room tidak ditemukan.')
+  if (user.plan === 'free') {
+    throw new HttpError(402, 'paywall:flagMode', 'Mode flag khusus akun Pro.')
+  }
+  return await getDb().transaction(async (tx) => {
+    const row = await getRoomRow(tx, user.id, roomId)
+    if (!row) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
+    if (row.category !== 'pasangan' || row.participant_count !== 2) {
+      throw new HttpError(400, 'validation_error', 'Mode flag hanya untuk pasangan berdua.')
+    }
+    if (enabled && row.flag_index >= row.flag_reserve.length) {
+      throw new HttpError(400, 'validation_error', 'Kartu flag sudah habis di room ini.')
+    }
+    await tx.update(rooms).set({ flag_mode: enabled }).where(eq(rooms.id, roomId))
+    const updated = await getRoomRow(tx, user.id, roomId)
+    if (!updated) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
+    return updated
+  })
+}
+
+export async function setFlagVotes(
+  userId: string,
+  roomId: string,
+  questionId: string,
+  votes: { p1: FlagVote; p2: FlagVote },
+): Promise<RoomRow> {
+  requireUuid(userId)
+  requireUuid(roomId, 'room_not_found', 'Room tidak ditemukan.')
+  requireUuid(questionId, 'validation_error', 'Kartu tidak dikenal.')
+  return await getDb().transaction(async (tx) => {
+    const row = await getRoomRow(tx, userId, roomId)
+    if (!row) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
+
+    const [question] = await tx
+      .select({ type: questions.type })
+      .from(questions)
+      .where(eq(questions.id, questionId))
+      .limit(1)
+    if (!question || question.type !== 'flag') {
+      throw new HttpError(400, 'validation_error', 'Kartu ini bukan kartu flag.')
+    }
+
+    await tx
+      .update(rooms)
+      .set({ flag_votes: { ...row.flag_votes, [questionId]: votes } })
+      .where(eq(rooms.id, roomId))
+    const updated = await getRoomRow(tx, userId, roomId)
+    if (!updated) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
+    return updated
   })
 }

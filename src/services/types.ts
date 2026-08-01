@@ -72,7 +72,7 @@ export interface Question {
   forGroup?: boolean
 }
 
-export type PaywallReason = 'participants' | 'questions' | 'rooms'
+export type PaywallReason = 'participants' | 'questions' | 'rooms' | 'flagMode'
 
 export class PaywallError extends Error {
   reason: PaywallReason
@@ -198,6 +198,13 @@ export interface RoomService {
   endSession(roomId: string): Promise<Room>
   /** Hapus room selesai. Akun free harus menunggu 6 jam setelah room selesai. */
   deleteRoom(roomId: string): Promise<void>
+  /** Nyalakan/matikan mode flag murni; berlaku mulai kartu berikutnya. */
+  setFlagMode(roomId: string, enabled: boolean): Promise<Room>
+  saveFlagVotes(
+    roomId: string,
+    questionId: string,
+    votes: { p1: FlagVote; p2: FlagVote },
+  ): Promise<Room>
 }
 
 export interface QuestionService {

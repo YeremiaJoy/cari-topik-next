@@ -31,6 +31,18 @@ export function createHttpRoomService(cache: QuestionCache): RoomService {
     async endSession(roomId) {
       return api<Room>(`/api/rooms/${roomId}/end`, { method: 'POST' })
     },
+    async setFlagMode(roomId, enabled) {
+      return api<Room>(`/api/rooms/${roomId}/flag-mode`, {
+        method: 'PATCH',
+        body: JSON.stringify({ enabled }),
+      })
+    },
+    async saveFlagVotes(roomId, questionId, votes) {
+      return api<Room>(`/api/rooms/${roomId}/flag-votes/${questionId}`, {
+        method: 'PUT',
+        body: JSON.stringify(votes),
+      })
+    },
     async deleteRoom(roomId) {
       await api<void>(`/api/rooms/${roomId}`, { method: 'DELETE' })
     },

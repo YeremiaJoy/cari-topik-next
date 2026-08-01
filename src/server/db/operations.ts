@@ -921,25 +921,28 @@ export async function setFlagVotes(
   requireUuid(userId)
   requireUuid(roomId, 'room_not_found', 'Room tidak ditemukan.')
   requireUuid(questionId, 'validation_error', 'Kartu tidak dikenal.')
-  return await getDb().transaction(async (tx) => {
-    const row = await getRoomRow(tx, userId, roomId)
-    if (!row) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
+  return await getDb().transaction(
+    async (tx) => {
+      const row = await getRoomRow(tx, userId, roomId)
+      if (!row) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
 
-    const [question] = await tx
-      .select({ type: questions.type })
-      .from(questions)
-      .where(eq(questions.id, questionId))
-      .limit(1)
-    if (!question || question.type !== 'flag') {
-      throw new HttpError(400, 'validation_error', 'Kartu ini bukan kartu flag.')
-    }
+      const [question] = await tx
+        .select({ type: questions.type })
+        .from(questions)
+        .where(eq(questions.id, questionId))
+        .limit(1)
+      if (!question || question.type !== 'flag') {
+        throw new HttpError(400, 'validation_error', 'Kartu ini bukan kartu flag.')
+      }
 
-    await tx
-      .update(rooms)
-      .set({ flag_votes: { ...row.flag_votes, [questionId]: votes } })
-      .where(eq(rooms.id, roomId))
-    const updated = await getRoomRow(tx, userId, roomId)
-    if (!updated) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
-    return updated
-  })
+      await tx
+        .update(rooms)
+        .set({ flag_votes: { ...row.flag_votes, [questionId]: votes } })
+        .where(eq(rooms.id, roomId))
+      const updated = await getRoomRow(tx, userId, roomId)
+      if (!updated) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
+      return updated
+    },
+    { isolationLevel: 'serializable' },
+  )
 }

@@ -4,7 +4,6 @@ import { createHttpAdminService } from './http/adminService'
 import { createHttpConfigStore } from './http/configStore'
 import { createHttpPaymentService } from './http/paymentService'
 import { createQuestionCache } from './http/questionCache'
-import { buildDeck } from '../lib/deck'
 import type { QuestionService } from './types'
 
 // Semua service bicara ke API route Next (/api/*); aturan bisnis hidup di
@@ -14,7 +13,6 @@ const questionCache = createQuestionCache()
 /** getById sinkron dari cache; deck room dikomposisi server (POST /api/rooms). */
 function createClientQuestionService(): QuestionService {
   return {
-    buildDeck: (setup) => buildDeck(questionCache.list(), setup),
     getById: (id) => questionCache.list().find((q) => q.id === id),
   }
 }

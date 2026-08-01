@@ -194,6 +194,5 @@ export interface RoomService {
 }
 
 export interface QuestionService {
-  buildDeck(setup: RoomSetup): Question[]
   getById(id: string): Question | undefined
 }

@@ -525,7 +525,9 @@ export async function createRoomForUser(
       const category = await getCategoryByName(tx, setup.category)
       const bankRows = await getQuestionRows(tx)
       const bank = bankRows.map(toQuestion)
-      const deck = buildDeck(bank, setup).map((q) => q.id)
+      const built = buildDeck(bank, setup)
+      const deck = built.deck.map((q) => q.id)
+      const flagReserve = built.flagReserve.map((q) => q.id)
       if (deck.length === 0) {
         throw new HttpError(400, 'validation_error', 'Tidak ada kartu untuk kombinasi ini.')
       }

@@ -79,6 +79,13 @@ export default function SessionPage() {
     const minutes = room.endedAt
       ? Math.max(0, Math.round((Date.parse(room.endedAt) - Date.parse(room.createdAt)) / 60000))
       : 0
+    // Kartu flag yang di-skip tidak punya entri, jadi tidak ikut dihitung.
+    const flagEntries = Object.entries(room.flagVotes)
+    const agreed = flagEntries.filter(([, v]) => v.p1 === v.p2).length
+    const disagreed = flagEntries
+      .filter(([, v]) => v.p1 !== v.p2)
+      .map(([qid]) => questionService.getById(qid))
+      .filter((q) => q !== undefined)
     return (
       <motion.div
         initial={reduce ? false : { opacity: 0, y: 20 }}
@@ -108,6 +115,43 @@ export default function SessionPage() {
             </div>
           </div>
         </div>
+
+        {flagEntries.length > 0 && (
+          <div className="mt-6 rounded-3xl border border-cream-200 bg-white p-5 shadow-warm-sm">
+            <h2 className="flex items-center gap-1.5 font-display text-lg font-bold italic">
+              <Glyph name="flagRed" className="h-4 w-4 text-flag-red" />
+              <Glyph name="flagGreen" className="h-4 w-4 text-flag-green" />
+              {t('flag.recapTitle')}
+            </h2>
+            <p className="mt-2 text-sm font-bold text-cocoa-700">
+              {t('flag.recapAgree', { agree: agreed, total: flagEntries.length })}
+            </p>
+            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-cream-100">
+              <div
+                className="h-full rounded-full bg-flag-green"
+                style={{ width: `${(agreed / flagEntries.length) * 100}%` }}
+              />
+            </div>
+
+            {disagreed.length > 0 && (
+              <>
+                <p className="mt-4 text-xs font-bold uppercase tracking-wider text-cocoa-500">
+                  {t('flag.recapDisagree')}
+                </p>
+                <div className="-mx-1 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {disagreed.map((q) => (
+                    <div
+                      key={q.id}
+                      className="w-52 shrink-0 snap-start rounded-2xl bg-cocoa-900 p-4 text-sm leading-snug text-white"
+                    >
+                      {q.text[lang]}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {favorit.length > 0 && (
           <div className="mt-8">

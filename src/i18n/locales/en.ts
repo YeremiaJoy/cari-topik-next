@@ -132,6 +132,7 @@ export const dict: Record<MessageKey, string> = {
   'flag.on': 'The next card switches to flag mode.',
   'flag.off': 'Back to regular questions.',
   'flag.exhausted': 'No flag cards left. Back to regular questions.',
+  'flag.toggleFailed': 'Could not switch flag mode. Please try again.',
   'flag.scenarioN': 'Scenario {{n}}',
   'flag.label': 'Red vs Green',
   'flag.partner1': 'Partner 1',

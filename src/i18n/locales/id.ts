@@ -130,6 +130,7 @@ export const dict = {
   'flag.on': 'Kartu berikutnya jadi mode flag.',
   'flag.off': 'Kembali ke pertanyaan biasa.',
   'flag.exhausted': 'Kartu flag habis. Lanjut ke pertanyaan biasa.',
+  'flag.toggleFailed': 'Gagal mengubah mode flag. Coba lagi ya.',
   'flag.scenarioN': 'Skenario {{n}}',
   'flag.label': 'Red vs Green',
   'flag.partner1': 'Pasangan 1',

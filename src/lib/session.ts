@@ -37,6 +37,11 @@ export function currentCardId(room: CardPools): string | undefined {
     : room.deck[room.currentIndex]
 }
 
+/** Jumlah kartu yang sudah dimainkan dari kedua kolam. */
+export function playedCount(room: { currentIndex: number; flagIndex: number }): number {
+  return room.currentIndex + room.flagIndex + 1
+}
+
 /**
  * Konsumsi kartu sekarang lalu tentukan kolam kartu berikutnya.
  * Toggle mode flag baru berlaku di kartu berikutnya — menukar kartu yang

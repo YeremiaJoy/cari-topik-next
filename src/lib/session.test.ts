@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { advancePools, currentCardId } from './session'
+import { advancePools, currentCardId, playedCount } from './session'
 import type { PoolCursors } from './session'
 
 const base: PoolCursors = {
@@ -97,5 +97,16 @@ describe('advancePools', () => {
   test('reserve tersisa tapi mode flag mati → deck habis tetap selesai', () => {
     const out = advancePools({ ...base, currentIndex: 4, flagMode: false, reserveLength: 3 })
     expect(out.completed).toBe(true)
+  })
+})
+
+describe('playedCount', () => {
+  test('menjumlahkan currentIndex dan flagIndex ditambah satu', () => {
+    expect(playedCount({ currentIndex: 0, flagIndex: 0 })).toBe(1)
+    expect(playedCount({ currentIndex: 2, flagIndex: 5 })).toBe(8)
+  })
+
+  test('tetap menghitung kartu reserve walau currentIndex nol', () => {
+    expect(playedCount({ currentIndex: 0, flagIndex: 4 })).toBe(5)
   })
 })

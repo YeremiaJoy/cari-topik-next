@@ -955,6 +955,13 @@ export async function setFlagVotes(
       const row = await getRoomRow(tx, userId, roomId)
       if (!row) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
 
+      // Kartu harus berasal dari salah satu kolam room ini — kalau tidak, pemilik room
+      // bisa menulis suara untuk kartu flag mana pun dan menggembungkan penyebut recap.
+      const inRoom = row.deck.includes(questionId) || row.flag_reserve.includes(questionId)
+      if (!inRoom) {
+        throw new HttpError(400, 'validation_error', 'Kartu ini bukan bagian dari room ini.')
+      }
+
       const [question] = await tx
         .select({ type: questions.type })
         .from(questions)
@@ -964,13 +971,9 @@ export async function setFlagVotes(
         throw new HttpError(400, 'validation_error', 'Kartu ini bukan kartu flag.')
       }
 
-      await tx
-        .update(rooms)
-        .set({ flag_votes: { ...row.flag_votes, [questionId]: votes } })
-        .where(eq(rooms.id, roomId))
-      const updated = await getRoomRow(tx, userId, roomId)
-      if (!updated) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
-      return updated
+      const flag_votes = { ...row.flag_votes, [questionId]: votes }
+      await tx.update(rooms).set({ flag_votes }).where(eq(rooms.id, roomId))
+      return { ...row, flag_votes }
     },
     { isolationLevel: 'serializable' },
   )

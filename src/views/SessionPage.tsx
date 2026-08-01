@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext'
 import { questionService, roomService } from '../services'
 import { PaywallError } from '../services/types'
 import type { Room, FlagVote, PaywallReason } from '../services/types'
-import { currentCardId } from '../lib/session'
+import { currentCardId, playedCount } from '../lib/session'
 import QuestionCard from '../components/QuestionCard'
 import FlagCard from '../components/FlagCard'
 import PaywallModal from '../components/PaywallModal'
@@ -75,7 +75,7 @@ export default function SessionPage() {
     const favorit = room.favorites
       .map((qid) => questionService.getById(qid))
       .filter((q) => q !== undefined)
-    const count = room.currentIndex + room.flagIndex + 1
+    const count = playedCount(room)
     const minutes = room.endedAt
       ? Math.max(0, Math.round((Date.parse(room.endedAt) - Date.parse(room.createdAt)) / 60000))
       : 0
@@ -205,7 +205,7 @@ export default function SessionPage() {
   const showFlagToggle =
     room.setup.category === 'pasangan' &&
     room.setup.participantCount === 2 &&
-    room.flagReserve.length > 0
+    room.flagIndex < room.flagReserve.length
 
   const advance = async () => {
     if (advancing) return
@@ -249,7 +249,9 @@ export default function SessionPage() {
       if (err instanceof PaywallError) {
         setPaywallReason('flagMode')
         setPaywall(true)
-      } else throw err
+      } else {
+        setToast(err instanceof Error ? err.message : t('flag.toggleFailed'))
+      }
     }
   }
 
@@ -260,32 +262,34 @@ export default function SessionPage() {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
       <div className="flex items-center justify-between text-sm text-cocoa-500">
-        <span className="font-bold tabular-nums">
-          {t('session.cardIndex', { n: room.currentIndex + room.flagIndex + 1 })}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="font-bold tabular-nums">
+            {t('session.cardIndex', { n: playedCount(room) })}
+          </span>
+          {showFlagToggle && (
+            <button
+              onClick={toggleFlagMode}
+              aria-pressed={room.flagMode}
+              className={`press flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-xs font-bold ${
+                room.flagMode
+                  ? 'border-terracotta-500 bg-terracotta-100 text-terracotta-700'
+                  : 'border-cream-200 bg-white text-cocoa-500'
+              }`}
+            >
+              <Glyph name="flagRed" className="h-3.5 w-3.5 text-flag-red" />
+              <Glyph name="flagGreen" className="h-3.5 w-3.5 text-flag-green" />
+              {t('flag.toggle')}
+              {!isPro && (
+                <span className="rounded-full bg-butter-100 px-1.5 py-0.5 text-[10px] text-cocoa-700">
+                  {t('flag.proBadge')}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
         <button onClick={akhiri} className="press rounded-md font-medium hover:text-terracotta-600">
           {t('session.endSession')}
         </button>
-        {showFlagToggle && (
-          <button
-            onClick={toggleFlagMode}
-            aria-pressed={room.flagMode}
-            className={`press flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-xs font-bold ${
-              room.flagMode
-                ? 'border-terracotta-500 bg-terracotta-100 text-terracotta-700'
-                : 'border-cream-200 bg-white text-cocoa-500'
-            }`}
-          >
-            <Glyph name="flagRed" className="h-3.5 w-3.5 text-flag-red" />
-            <Glyph name="flagGreen" className="h-3.5 w-3.5 text-flag-green" />
-            {t('flag.toggle')}
-            {!isPro && (
-              <span className="rounded-full bg-butter-100 px-1.5 py-0.5 text-[10px] text-cocoa-700">
-                {t('flag.proBadge')}
-              </span>
-            )}
-          </button>
-        )}
       </div>
 
       <div className="flex items-start gap-3">
@@ -301,7 +305,7 @@ export default function SessionPage() {
               <FlagCard
                 key={question.id}
                 question={question}
-                nomor={room.currentIndex + room.flagIndex + 1}
+                nomor={playedCount(room)}
                 favorit={room.favorites.includes(question.id)}
                 onToggleFavorit={toggleFavorit}
                 onVoted={saveVotes}
@@ -310,7 +314,7 @@ export default function SessionPage() {
               <QuestionCard
                 key={question.id}
                 question={question}
-                nomor={room.currentIndex + room.flagIndex + 1}
+                nomor={playedCount(room)}
                 favorit={room.favorites.includes(question.id)}
                 onToggleFavorit={toggleFavorit}
               />

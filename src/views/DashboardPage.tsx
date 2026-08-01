@@ -10,6 +10,7 @@ import { QUESTION_RESET_MS, ROOM_DELETE_COOLDOWN_MS } from '../services/types'
 import type { Category, Room } from '../services/types'
 import { useLang, localeTag } from '../i18n/useLang'
 import { formatCountdown } from '../lib/countdown'
+import { playedCount } from '../lib/session'
 import PaywallModal from '../components/PaywallModal'
 
 const CATEGORY_EMOJI: Record<Category, string> = {
@@ -193,7 +194,7 @@ export default function DashboardPage() {
                     </span>
                     <p className="truncate text-sm text-cocoa-500">
                       {t('dashboard.cardsDiscussed', {
-                        count: room.currentIndex + 1,
+                        count: playedCount(room),
                         date: formatTanggal(room.createdAt, localeTag(lang)),
                       })}
                     </p>

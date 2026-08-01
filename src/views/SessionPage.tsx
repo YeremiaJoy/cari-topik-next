@@ -274,43 +274,35 @@ export default function SessionPage() {
           </button>
         </div>
 
-        {/* Pil belah merah|hijau — kontrolnya sendiri yang jadi petunjuk warna,
-            jadi mode-nya kebaca sebelum tombolnya disentuh. */}
+        {/* Chip ringkas: warna cuma di dua mark-nya, sisanya netral. Nama mode
+            yang bikin jelas, bukan bidang warna besar. */}
         {showFlagToggle && (
           <button
             onClick={toggleFlagMode}
             aria-pressed={room.flagMode}
             title={t('flag.toggleHint')}
-            className={`press flex w-full items-stretch overflow-hidden rounded-full border-2 text-xs font-extrabold ${
-              room.flagMode ? 'border-cocoa-900 shadow-warm-md' : 'border-cream-200'
+            className={`press inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold ${
+              room.flagMode
+                ? 'border-cocoa-900 bg-cocoa-900 text-white'
+                : 'border-cream-200 bg-white text-cocoa-700'
             }`}
           >
-            <span
-              className={`flex flex-1 items-center justify-end py-2 pr-2 ${
-                room.flagMode ? 'bg-flag-red text-white' : 'bg-flag-red-soft text-flag-red'
-              }`}
-            >
-              <Glyph name="flagRed" className="h-4 w-4" />
+            <span aria-hidden className="flex items-center gap-0.5">
+              <Glyph
+                name="flagRed"
+                className={`h-3.5 w-3.5 ${room.flagMode ? 'text-flag-red-on-dark' : 'text-flag-red'}`}
+              />
+              <Glyph
+                name="flagGreen"
+                className={`h-3.5 w-3.5 ${room.flagMode ? 'text-flag-green-on-dark' : 'text-flag-green'}`}
+              />
             </span>
-            <span
-              className={`flex items-center gap-1.5 px-3 py-2 ${
-                room.flagMode ? 'bg-cocoa-900 text-white' : 'bg-white text-cocoa-700'
-              }`}
-            >
-              {t('flag.toggle')}
-              {!isPro && (
-                <span className="rounded-full bg-butter-100 px-1.5 py-0.5 text-[10px] text-cocoa-700">
-                  {t('flag.proBadge')}
-                </span>
-              )}
-            </span>
-            <span
-              className={`flex flex-1 items-center justify-start py-2 pl-2 ${
-                room.flagMode ? 'bg-flag-green-deep text-white' : 'bg-flag-green-soft text-flag-green'
-              }`}
-            >
-              <Glyph name="flagGreen" className="h-4 w-4" />
-            </span>
+            {t('flag.toggle')}
+            {!isPro && (
+              <span className="rounded-full bg-butter-100 px-1.5 py-0.5 text-[10px] font-bold text-cocoa-700">
+                {t('flag.proBadge')}
+              </span>
+            )}
           </button>
         )}
       </div>

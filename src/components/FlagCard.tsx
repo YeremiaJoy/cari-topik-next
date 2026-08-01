@@ -118,12 +118,6 @@ export default function FlagCard({ question, nomor, favorit, onToggleFavorit, on
       style={{ transformPerspective: 1000 }}
       className="rounded-[32px] border border-cream-200 bg-cream-100 p-3 shadow-warm-md"
     >
-      {/* Pita gradasi merah → hijau: penanda mode yang kebaca sebelum satu kata pun dibaca. */}
-      <div
-        aria-hidden
-        className="mb-2.5 h-1.5 rounded-full bg-gradient-to-r from-flag-red via-butter-200 to-flag-green-deep"
-      />
-
       {revealed ? (
         <div className="flex gap-2">
           <ResultTile partnerKey="partner1" vote={p1} />

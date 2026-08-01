@@ -7,6 +7,12 @@ export type Bias = 'introvert' | 'extrovert' | 'netral'
 export type QuestionType = 'question' | 'flag'
 export type FlagVote = 'red' | 'green'
 
+/** Suara seluruh pengguna untuk satu kartu flag. */
+export interface FlagCrowdStats {
+  red: number
+  green: number
+}
+
 export const FREE_MAX_PARTICIPANTS = 2
 export const FREE_MAX_QUESTIONS = 5
 export const FREE_MAX_ROOMS = 1
@@ -204,7 +210,7 @@ export interface RoomService {
     roomId: string,
     questionId: string,
     votes: { p1: FlagVote; p2: FlagVote },
-  ): Promise<Room>
+  ): Promise<{ room: Room; stats: FlagCrowdStats }>
 }
 
 export interface QuestionService {

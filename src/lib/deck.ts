@@ -48,6 +48,7 @@ export function buildDeck(
   bank: Question[],
   setup: RoomSetup,
   shuffle: <T>(items: T[]) => T[] = defaultShuffle,
+  seen: ReadonlySet<string> = new Set(),
 ): BuiltDeck {
   const wantGroup = setup.participantCount > 2
   const avoid = deprioritizedBias(setup)
@@ -59,14 +60,25 @@ export function buildDeck(
       Boolean(q.forGroup) === wantGroup,
   )
 
-  // Bias lawan kepribadian tetap ditaruh belakang, sekarang di level deck.
+  // Bias lawan kepribadian ditaruh belakang.
   const demote = (pool: Question[]) =>
     avoid ? [...pool.filter((q) => q.bias !== avoid), ...pool.filter((q) => q.bias === avoid)] : pool
 
-  const ringan = demote(shuffle(inScope.filter((q) => q.depth === 'ringan')))
+  /**
+   * Kartu yang belum pernah dimainkan user didahulukan; yang sudah pernah
+   * tetap ikut, cuma di belakang — jadi bank yang habis tidak bikin dek
+   * kosong, sekadar mulai mengulang. Kesegaran menang atas bias: kartu baru
+   * yang kurang cocok tetap lebih berharga daripada pengulangan.
+   */
+  const arrange = (pool: Question[]) => [
+    ...demote(pool.filter((q) => !seen.has(q.id))),
+    ...demote(pool.filter((q) => seen.has(q.id))),
+  ]
+
+  const ringan = arrange(shuffle(inScope.filter((q) => q.depth === 'ringan')))
   const warmup = ringan.slice(0, WARMUP_CARDS)
   const warmupIds = new Set(warmup.map((q) => q.id))
-  const rest = demote(shuffle(inScope.filter((q) => !warmupIds.has(q.id))))
+  const rest = arrange(shuffle(inScope.filter((q) => !warmupIds.has(q.id))))
 
   const classic = [...warmup, ...rest]
 

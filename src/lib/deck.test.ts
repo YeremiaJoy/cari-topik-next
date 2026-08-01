@@ -141,4 +141,24 @@ describe('buildDeck', () => {
     expect(deck.map((x) => x.id)).toEqual(['r1', 'r2', 'd1', 's1'])
     expect(flagReserve).toEqual([])
   })
+
+  test('kartu yang sudah pernah dilihat ditaruh belakang', () => {
+    // r1 sudah pernah dimainkan, jadi pemanasan mendahulukan r2.
+    const { deck } = buildDeck(BANK, pairSetup(), identity, new Set(['r1']))
+    expect(deck[0].id).toBe('r2')
+    expect(deck.map((x) => x.id)).toContain('r1')
+  })
+
+  test('semua kartu sudah pernah dilihat → dek tetap terisi penuh', () => {
+    const allSeen = new Set(['r1', 'r2', 's1', 'd1'])
+    const { deck } = buildDeck(BANK, pairSetup(), identity, allSeen)
+    expect(deck.map((x) => x.id).sort()).toEqual(['d1', 'r1', 'r2', 's1'])
+  })
+
+  test('kesegaran menang atas bias kepribadian', () => {
+    // Dua extrovert biasanya menaruh r1 (introvert) di belakang, tapi r2 sudah
+    // pernah dilihat — kartu baru tetap lebih berharga daripada pengulangan.
+    const { deck } = buildDeck(BANK, pairSetup(['extrovert', 'extrovert']), identity, new Set(['r2']))
+    expect(deck[0].id).toBe('r1')
+  })
 })

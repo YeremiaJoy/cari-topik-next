@@ -258,8 +258,17 @@ export default function SessionPage() {
     }
   }
 
+  // Reveal sudah tampil dari state kartu; kalau simpan gagal, cukup kabari
+  // lewat toast — jangan sampai suara hilang diam-diam tanpa jejak.
   const saveVotes = async (p1: FlagVote, p2: FlagVote) => {
-    await roomService.saveFlagVotes(room.id, question.id, { p1, p2 })
+    try {
+      const { room: next, stats } = await roomService.saveFlagVotes(room.id, question.id, { p1, p2 })
+      setRoom(next)
+      return stats
+    } catch {
+      setToast(t('flag.voteSaveFailed'))
+      return null
+    }
   }
 
   return (

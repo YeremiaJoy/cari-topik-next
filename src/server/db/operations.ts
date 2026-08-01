@@ -1,6 +1,6 @@
 import { and, count, desc, eq, isNull, lt, sql } from 'drizzle-orm'
 import { buildDeck } from '@/lib/deck'
-import { advancePools } from '@/lib/session'
+import { advancePools, seenQuestionIds } from '@/lib/session'
 import {
   DEFAULT_APP_CONFIG,
   QUESTION_RESET_MS,
@@ -9,6 +9,7 @@ import {
   type Category,
   type Depth,
   type Bias,
+  type FlagCrowdStats,
   type FlagVote,
   type Personality,
   type Plan,
@@ -588,7 +589,19 @@ export async function createRoomForUser(
       const category = await getCategoryByName(tx, setup.category)
       const bankRows = await getQuestionRows(tx)
       const bank = bankRows.map(toQuestion)
-      const built = buildDeck(bank, setup)
+      // Kartu yang sudah pernah dilihat user ditaruh belakang, bukan dibuang —
+      // sesi berikutnya terasa baru tanpa risiko dek kosong saat bank habis.
+      const history = await tx
+        .select({
+          deck: rooms.deck,
+          currentIndex: rooms.current_index,
+          flagReserve: rooms.flag_reserve,
+          flagIndex: rooms.flag_index,
+          currentPool: rooms.current_pool,
+        })
+        .from(rooms)
+        .where(eq(rooms.user_id, user.id))
+      const built = buildDeck(bank, setup, undefined, seenQuestionIds(history))
       const deck = built.deck.map((q) => q.id)
       const flagReserve = built.flagReserve.map((q) => q.id)
       if (deck.length === 0) {
@@ -968,7 +981,7 @@ export async function setFlagVotes(
   roomId: string,
   questionId: string,
   votes: { p1: FlagVote; p2: FlagVote },
-): Promise<RoomRow> {
+): Promise<{ row: RoomRow; stats: FlagCrowdStats }> {
   requireUuid(userId)
   requireUuid(roomId, 'room_not_found', 'Room tidak ditemukan.')
   requireUuid(questionId, 'validation_error', 'Kartu tidak dikenal.')
@@ -995,7 +1008,21 @@ export async function setFlagVotes(
 
       const flag_votes = { ...row.flag_votes, [questionId]: votes }
       await tx.update(rooms).set({ flag_votes }).where(eq(rooms.id, roomId))
-      return { ...row, flag_votes }
+
+      // Suara komunitas dibaca di transaksi yang sama, jadi angka yang balik
+      // ke pemain sudah termasuk suara mereka sendiri.
+      const voteRows = await tx.select({ flag_votes: rooms.flag_votes }).from(rooms)
+      const stats: FlagCrowdStats = { red: 0, green: 0 }
+      for (const other of voteRows) {
+        const pair = other.flag_votes[questionId]
+        if (!pair) continue
+        for (const choice of [pair.p1, pair.p2]) {
+          if (choice === 'red') stats.red += 1
+          else stats.green += 1
+        }
+      }
+
+      return { row: { ...row, flag_votes }, stats }
     },
     { isolationLevel: 'serializable' },
   )

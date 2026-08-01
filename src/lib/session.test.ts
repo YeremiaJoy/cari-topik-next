@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { advancePools, currentCardId, playedCount } from './session'
+import { advancePools, currentCardId, playedCount, seenQuestionIds } from './session'
 import type { PoolCursors } from './session'
 
 const base: PoolCursors = {
@@ -108,5 +108,35 @@ describe('playedCount', () => {
 
   test('tetap menghitung kartu reserve walau currentIndex nol', () => {
     expect(playedCount({ currentIndex: 0, flagIndex: 4 })).toBe(5)
+  })
+})
+
+describe('seenQuestionIds', () => {
+  const room = (over: Partial<Parameters<typeof seenQuestionIds>[0][number]> = {}) => ({
+    deck: ['d0', 'd1', 'd2'],
+    currentIndex: 0,
+    flagReserve: ['f0', 'f1'],
+    flagIndex: 0,
+    currentPool: 'deck' as const,
+    ...over,
+  })
+
+  test('kartu yang sedang tampil ikut terhitung', () => {
+    expect([...seenQuestionIds([room()])]).toEqual(['d0'])
+  })
+
+  test('kolam yang tidak aktif berhenti sebelum kursornya', () => {
+    // Pool flag aktif di flagIndex 1, jadi f0+f1 kehitung; deck berhenti di d0.
+    const seen = seenQuestionIds([room({ currentIndex: 1, currentPool: 'flag', flagIndex: 1 })])
+    expect([...seen].sort()).toEqual(['d0', 'f0', 'f1'])
+  })
+
+  test('menggabungkan beberapa room tanpa duplikat', () => {
+    const seen = seenQuestionIds([room({ currentIndex: 2 }), room({ currentIndex: 1 })])
+    expect([...seen].sort()).toEqual(['d0', 'd1', 'd2'])
+  })
+
+  test('room kosong tidak menghasilkan apa-apa', () => {
+    expect(seenQuestionIds([]).size).toBe(0)
   })
 })

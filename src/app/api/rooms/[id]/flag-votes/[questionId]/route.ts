@@ -20,7 +20,10 @@ export async function PUT(
     if (!VOTES.includes(body?.p1) || !VOTES.includes(body?.p2)) {
       return jsonError(400, 'validation_error', 'Suara harus red atau green.')
     }
-    const room = await setFlagVotes(user.id, id, questionId, { p1: body.p1, p2: body.p2 })
-    return NextResponse.json(toRoom(room))
+    const { row, stats } = await setFlagVotes(user.id, id, questionId, {
+      p1: body.p1,
+      p2: body.p2,
+    })
+    return NextResponse.json({ room: toRoom(row), stats })
   })
 }

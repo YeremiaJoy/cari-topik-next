@@ -1,4 +1,4 @@
-import type { Room, RoomService } from '../types'
+import type { FlagCrowdStats, Room, RoomService } from '../types'
 import { api, ApiError } from './client'
 import type { QuestionCache } from './questionCache'
 
@@ -38,7 +38,7 @@ export function createHttpRoomService(cache: QuestionCache): RoomService {
       })
     },
     async saveFlagVotes(roomId, questionId, votes) {
-      return api<Room>(`/api/rooms/${roomId}/flag-votes/${questionId}`, {
+      return api<{ room: Room; stats: FlagCrowdStats }>(`/api/rooms/${roomId}/flag-votes/${questionId}`, {
         method: 'PUT',
         body: JSON.stringify(votes),
       })

@@ -42,6 +42,35 @@ export function playedCount(room: { currentIndex: number; flagIndex: number }): 
   return room.currentIndex + room.flagIndex + 1
 }
 
+/** Bentuk minimal satu room untuk menghitung kartu yang sudah lewat. */
+export interface PlayedCards {
+  deck: string[]
+  currentIndex: number
+  flagReserve: string[]
+  flagIndex: number
+  currentPool: Pool
+}
+
+/**
+ * Semua kartu yang pernah muncul di layar user, dikumpulkan dari room-room
+ * lamanya. Dipakai buat mendahulukan kartu baru saat menyusun dek berikutnya,
+ * supaya sesi kedua tidak mengulang sesi pertama.
+ *
+ * Kursor menunjuk kartu yang sedang tampil, jadi kartu itu ikut terhitung —
+ * kolam yang sedang tidak aktif berhenti satu kartu lebih pendek karena
+ * kursornya menunggu, belum menampilkan.
+ */
+export function seenQuestionIds(rooms: readonly PlayedCards[]): Set<string> {
+  const seen = new Set<string>()
+  for (const room of rooms) {
+    const deckCount = room.currentIndex + (room.currentPool === 'deck' ? 1 : 0)
+    const flagCount = room.flagIndex + (room.currentPool === 'flag' ? 1 : 0)
+    for (const id of room.deck.slice(0, deckCount)) seen.add(id)
+    for (const id of room.flagReserve.slice(0, flagCount)) seen.add(id)
+  }
+  return seen
+}
+
 /**
  * Konsumsi kartu sekarang lalu tentukan kolam kartu berikutnya.
  * Toggle mode flag baru berlaku di kartu berikutnya — menukar kartu yang

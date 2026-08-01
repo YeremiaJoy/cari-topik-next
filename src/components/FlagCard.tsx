@@ -3,17 +3,21 @@
 import { useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
-import type { FlagVote, Question } from '../services/types'
+import type { FlagCrowdStats, FlagVote, Question } from '../services/types'
 import { useLang } from '../i18n/useLang'
 import Glyph from './Glyph'
+import { redSharePercent } from '../lib/analytics'
 
 interface Props {
   question: Question
   nomor: number
   favorit: boolean
   onToggleFavorit: () => void
-  /** Dipanggil sekali saat tap kedua masuk — induk yang menyimpan ke server. */
-  onVoted: (p1: FlagVote, p2: FlagVote) => void
+  /**
+   * Dipanggil sekali saat tap kedua masuk — induk yang menyimpan ke server dan
+   * mengembalikan suara komunitas, atau null kalau penyimpanan gagal.
+   */
+  onVoted: (p1: FlagVote, p2: FlagVote) => Promise<FlagCrowdStats | null>
 }
 
 function HeartIcon({ filled }: { filled: boolean }) {
@@ -98,15 +102,18 @@ export default function FlagCard({ question, nomor, favorit, onToggleFavorit, on
   const { t } = useTranslation()
   const [p1, setP1] = useState<FlagVote | null>(null)
   const [p2, setP2] = useState<FlagVote | null>(null)
+  const [crowd, setCrowd] = useState<FlagCrowdStats | null>(null)
 
   const revealed = p1 !== null && p2 !== null
+  const crowdRed = crowd ? redSharePercent(crowd) : null
 
   const pick = (who: 'p1' | 'p2', value: FlagVote) => {
     const next1 = who === 'p1' ? value : p1
     const next2 = who === 'p2' ? value : p2
     setP1(next1)
     setP2(next2)
-    if (next1 && next2) onVoted(next1, next2)
+    // Reveal tampil langsung dari state lokal; angka komunitas menyusul.
+    if (next1 && next2) void onVoted(next1, next2).then(setCrowd)
   }
 
   return (
@@ -151,16 +158,35 @@ export default function FlagCard({ question, nomor, favorit, onToggleFavorit, on
       </div>
 
       {revealed ? (
-        // Sepakat → hijau, beda → merah. Vonisnya ikut berwarna, bukan cuma teks.
-        <p
-          className={`rounded-2xl py-2 text-center font-display text-lg font-black italic ${
-            p1 === p2
-              ? 'bg-flag-green-soft text-flag-green-deep'
-              : 'bg-flag-red-soft text-flag-red'
-          }`}
-        >
-          {p1 === p2 ? t('flag.same') : t('flag.different')}
-        </p>
+        <div className="flex flex-col gap-2">
+          {/* Sepakat → hijau, beda → merah. Vonisnya ikut berwarna, bukan cuma teks. */}
+          <p
+            className={`rounded-2xl py-2 text-center font-display text-lg font-black italic ${
+              p1 === p2
+                ? 'bg-flag-green-soft text-flag-green-deep'
+                : 'bg-flag-red-soft text-flag-red'
+            }`}
+          >
+            {p1 === p2 ? t('flag.same') : t('flag.different')}
+          </p>
+          {crowdRed !== null && (
+            <div className="px-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-cocoa-500">
+                {t('flag.crowd')}
+              </p>
+              <div className="mt-1 flex h-2.5 overflow-hidden rounded-full bg-flag-green-soft">
+                <div className="h-full bg-flag-red" style={{ width: `${crowdRed}%` }} />
+                <div className="h-full flex-1 bg-flag-green-deep" />
+              </div>
+              <p className="mt-1 flex justify-between text-[10px] font-bold">
+                <span className="text-flag-red">{t('flag.crowdRed', { percent: crowdRed })}</span>
+                <span className="text-flag-green-deep">
+                  {t('flag.crowdGreen', { percent: 100 - crowdRed })}
+                </span>
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
         <VotePanel partnerKey="partner2" vote={p2} flipped={false} onPick={(v) => pick('p2', v)} />
       )}

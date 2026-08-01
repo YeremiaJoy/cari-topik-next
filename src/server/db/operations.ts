@@ -454,6 +454,12 @@ export async function updateQuestionRow(
   patch: Partial<Omit<QuestionRow, 'id' | 'question_code' | 'created_at'>>,
 ): Promise<QuestionRow> {
   requireUuid(id, 'question_not_found', 'Pertanyaan tidak ditemukan.')
+  const [existing] = await getDb()
+    .select({ type: questions.type })
+    .from(questions)
+    .where(eq(questions.id, id))
+    .limit(1)
+  if (!existing) throw new HttpError(404, 'question_not_found', 'Pertanyaan tidak ditemukan.')
   const row: Partial<typeof questions.$inferInsert> = {}
   if (patch.text_id !== undefined) row.text_id = patch.text_id
   if (patch.text_en !== undefined) row.text_en = patch.text_en
@@ -463,6 +469,17 @@ export async function updateQuestionRow(
   if (patch.type !== undefined) row.type = patch.type
   if (patch.category !== undefined) {
     row.category_id = (await getCategoryByName(getDb(), patch.category)).id
+  }
+  // Kartu flag selalu pasangan/ringan/netral/tanpa grup. Tipe efektif dihitung dari patch bila
+  // ada, atau dari data tersimpan bila patch tidak mengubah tipe — lalu dipaksa tanpa syarat,
+  // supaya request yang tidak menyertakan `type` tidak bisa memindahkan kartu flag ke kategori lain.
+  const effectiveType = patch.type ?? existing.type
+  if (effectiveType === 'flag') {
+    row.type = 'flag'
+    row.depth = 'ringan'
+    row.bias = 'netral'
+    row.for_group = false
+    row.category_id = (await getCategoryByName(getDb(), 'pasangan')).id
   }
   const [updated] = await getDb()
     .update(questions)

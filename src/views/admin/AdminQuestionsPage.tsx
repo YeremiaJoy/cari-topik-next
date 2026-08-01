@@ -70,19 +70,26 @@ export default function AdminQuestionsPage() {
     if (!form.textId.trim() || !form.textEn.trim()) return
     setBusy(true)
     try {
-      const input = {
-        text: { id: form.textId.trim(), en: form.textEn.trim() },
-        type: form.type,
-        ...(form.type === 'question'
+      const input: Omit<Question, 'id'> =
+        form.type === 'question'
           ? {
+              text: { id: form.textId.trim(), en: form.textEn.trim() },
+              type: form.type,
               category: form.category,
               depth: form.depth,
               bias: form.bias,
               forGroup: form.forGroup || undefined,
             }
-          : {}),
-      }
-      if (editingId === 'new') await adminService.createQuestion(input as Omit<Question, 'id'>)
+          : {
+              text: { id: form.textId.trim(), en: form.textEn.trim() },
+              type: form.type,
+              // Server memaksa nilai ini juga; dikirim eksplisit supaya payload klien cocok dengan yang disimpan.
+              category: 'pasangan',
+              depth: 'ringan',
+              bias: 'netral',
+              forGroup: false,
+            }
+      if (editingId === 'new') await adminService.createQuestion(input)
       else if (editingId) await adminService.updateQuestion(editingId, input)
       await refresh()
       setEditingId(null)

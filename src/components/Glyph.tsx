@@ -8,6 +8,8 @@ export type GlyphName =
   | 'group'
   | 'introvert'
   | 'extrovert'
+  | 'flagRed'
+  | 'flagGreen'
 
 const base: SVGProps<SVGSVGElement> = {
   viewBox: '0 0 24 24',
@@ -71,6 +73,22 @@ export default function Glyph({ name, className }: { name: GlyphName; className?
       return (
         <svg {...base} className={cn}>
           <path d="M13 3 5 13h5l-1 8 8-10h-5l1-8Z" fill="currentColor" fillOpacity="0.16" />
+        </svg>
+      )
+    case 'flagRed':
+      return (
+        <svg {...base} className={cn}>
+          <path d="M6.6 3.2v17.6" strokeWidth="2.2" />
+          <path d="M7.4 4.4h10.4l-3 3.7 3 3.7H7.4z" fill="currentColor" stroke="none" />
+          <path d="M10.6 5.9c1.5.9 2.6.9 4.1 0" stroke="var(--color-cream-50)" strokeWidth="1.4" opacity="0.55" />
+        </svg>
+      )
+    case 'flagGreen':
+      return (
+        <svg {...base} className={cn}>
+          <path d="M6.6 3.2v17.6" strokeWidth="2.2" />
+          <path d="M7.4 4.4h7.9c2.5 0 3.8 1.4 3.8 3.7s-1.3 3.7-3.8 3.7H7.4z" fill="currentColor" stroke="none" />
+          <path d="M10.6 6c1.5.9 2.6.9 4.1 0" stroke="var(--color-cream-50)" strokeWidth="1.4" opacity="0.55" />
         </svg>
       )
   }

@@ -19,6 +19,15 @@
   --color-butter-100: #fdf1c7;
   --color-butter-200: #f9e39a;
 
+  /* Red vs Green flag mode. Nada hangat supaya menyatu dengan palet cream. */
+  --color-flag-red: #c0392b;
+  --color-flag-red-soft: #fbe3df;
+  --color-flag-green: #2f8f6b;
+  --color-flag-green-soft: #dcf0e7;
+  /* Varian untuk mark di atas pita cocoa-900. */
+  --color-flag-red-on-dark: #ff8a72;
+  --color-flag-green-on-dark: #5fd6a8;
+
   /* Tinta espresso — lebih pekat untuk kontras */
   --color-cocoa-500: #8a6650;
   --color-cocoa-700: #503726;

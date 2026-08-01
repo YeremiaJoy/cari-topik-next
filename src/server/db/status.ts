@@ -35,6 +35,17 @@ export function resolveCurrentPlanName(rows: PlanCandidate[]): Plan {
   return active[0]?.name ?? 'free'
 }
 
+/**
+ * Plan yang benar-benar berlaku sekarang. `user_plan` bisa masih bilang 'pro'
+ * padahal periode langganannya sudah lewat dan cron harian belum menyapu —
+ * di titik itu user tidak berhak lagi. Pro tanpa baris subscription sama
+ * sekali (grant admin) tidak pernah dianggap lewat.
+ */
+export function resolveEffectivePlan(planName: Plan, hasLapsedSubscription: boolean): Plan {
+  if (planName === 'pro' && hasLapsedSubscription) return 'free'
+  return planName
+}
+
 export function resolveActiveRoleName(rows: RoleCandidate[]): Role {
   const active = rows.filter((row) => !row.deleted_at)
   if (active.some((row) => row.name === 'admin')) return 'admin'

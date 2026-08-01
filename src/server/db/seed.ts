@@ -39,7 +39,7 @@ async function main() {
     await pool.query(`
       insert into plan (id, name, benefit_summary, price, price_after_discount, is_active, duration_days) values
         ($1, 'free', '{"id":"Gratis","en":"Free plan"}'::jsonb, 0, 0, true, null),
-        ($2, 'pro', '{"id":"Mode grup, kartu lebih banyak, dan dukungan offline","en":"Group mode, more cards, and offline support"}'::jsonb, 50000, 25000, true, 30)
+        ($2, 'pro', '{"id":"Mode grup, kartu lebih banyak, dan dukungan offline","en":"Group mode, more cards, and offline support"}'::jsonb, 50000, 25000, true, 365)
       on conflict (name) do update set
         benefit_summary = excluded.benefit_summary,
         price = excluded.price,

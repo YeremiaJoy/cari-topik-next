@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { buildDeck } from './deck'
+import { buildDeck, WARMUP_CARDS } from './deck'
 import type { Question, RoomSetup } from '../services/types'
 
 const identity = <T,>(items: T[]): T[] => [...items]
@@ -48,9 +48,34 @@ const BIG_BANK: Question[] = [
 ]
 
 describe('buildDeck', () => {
-  test('filter kategori + mode, urut ringan → sedang → dalam', () => {
+  test('filter kategori + mode, dua kartu ringan dulu lalu sisanya acak', () => {
     const { deck } = buildDeck(BANK, pairSetup(), identity)
-    expect(deck.map((x) => x.id)).toEqual(['r1', 'r2', 's1', 'd1'])
+    expect(deck.map((x) => x.id)).toEqual(['r1', 'r2', 'd1', 's1'])
+  })
+
+  test('dua kartu pertama selalu ringan', () => {
+    const { deck } = buildDeck(BANK, pairSetup(), identity)
+    expect(deck.slice(0, WARMUP_CARDS).map((x) => x.depth)).toEqual(['ringan', 'ringan'])
+  })
+
+  test('setelah pemanasan kedalaman tidak lagi berurutan', () => {
+    // d1 (dalam) muncul sebelum s1 (sedang) — mustahil di urutan lama.
+    const { deck } = buildDeck(BANK, pairSetup(), identity)
+    const after = deck.slice(WARMUP_CARDS).map((x) => x.depth)
+    expect(after).toEqual(['dalam', 'sedang'])
+  })
+
+  test('tiap kartu muncul tepat sekali, tidak ada yang hilang atau dobel', () => {
+    const { deck } = buildDeck(BANK, pairSetup(), identity)
+    const ids = deck.map((x) => x.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(ids.sort()).toEqual(['d1', 'r1', 'r2', 's1'])
+  })
+
+  test('kartu ringan lebih sedikit dari jatah pemanasan tidak bikin error', () => {
+    const bank = [q('r1', 'ringan', 'netral'), q('s1', 'sedang', 'netral')]
+    const { deck } = buildDeck(bank, pairSetup(), identity)
+    expect(deck.map((x) => x.id)).toEqual(['r1', 's1'])
   })
 
   test('mode grup hanya kartu forGroup', () => {
@@ -58,16 +83,17 @@ describe('buildDeck', () => {
     expect(deck.map((x) => x.id)).toEqual(['g1'])
   })
 
-  test('dua introvert → bias extrovert ke belakang tiap blok', () => {
+  test('dua introvert → bias extrovert ke belakang', () => {
     const { deck } = buildDeck(BANK, pairSetup(['introvert', 'introvert']), identity)
-    expect(deck.map((x) => x.id)).toEqual(['r1', 'r2', 's1', 'd1'])
+    expect(deck.map((x) => x.id)).toEqual(['r1', 'r2', 'd1', 's1'])
+    // Dua extrovert membalik urutan pemanasan: r2 (extrovert) naik duluan.
     const twoExtro = buildDeck(BANK, pairSetup(['extrovert', 'extrovert']), identity)
-    expect(twoExtro.deck.map((x) => x.id)).toEqual(['r2', 'r1', 's1', 'd1'])
+    expect(twoExtro.deck.map((x) => x.id)).toEqual(['r2', 'r1', 'd1', 's1'])
   })
 
   test('kepribadian beda → tanpa deprioritas', () => {
     const { deck } = buildDeck(BANK, pairSetup(['introvert', 'extrovert']), identity)
-    expect(deck.map((x) => x.id)).toEqual(['r1', 'r2', 's1', 'd1'])
+    expect(deck.map((x) => x.id)).toEqual(['r1', 'r2', 'd1', 's1'])
   })
 
   test('kartu flag disisipkan tiap 4 kartu klasik, tidak pernah di indeks 0', () => {
@@ -110,9 +136,9 @@ describe('buildDeck', () => {
     expect(flagReserve).toEqual([])
   })
 
-  test('bank tanpa kartu flag → perilaku lama persis', () => {
+  test('bank tanpa kartu flag → deck klasik saja, reserve kosong', () => {
     const { deck, flagReserve } = buildDeck(BANK, pairSetup(), identity)
-    expect(deck.map((x) => x.id)).toEqual(['r1', 'r2', 's1', 'd1'])
+    expect(deck.map((x) => x.id)).toEqual(['r1', 'r2', 'd1', 's1'])
     expect(flagReserve).toEqual([])
   })
 })

@@ -1,6 +1,4 @@
-import type { Bias, Depth, Personality, Question, RoomSetup } from '../services/types'
-
-const DEPTH_ORDER: Depth[] = ['ringan', 'sedang', 'dalam']
+import type { Bias, Personality, Question, RoomSetup } from '../services/types'
 
 function defaultShuffle<T>(items: T[]): T[] {
   const result = [...items]
@@ -32,8 +30,16 @@ function allowsFlagCards(setup: RoomSetup): boolean {
 }
 
 /**
- * Komposisi deck: filter kategori + mode, urut ringan → sedang → dalam
- * (acak di dalam tiap blok), bias lawan kepribadian ditaruh belakang.
+ * Kartu ringan yang selalu dibuka duluan sebelum sisanya diacak bebas.
+ * Cukup buat mencairkan suasana, tapi nggak sampai bikin urutannya ketebak.
+ */
+export const WARMUP_CARDS = 2
+
+/**
+ * Komposisi deck: filter kategori + mode, dua kartu ringan sebagai pembuka,
+ * lalu sisa kartu diacak bebas lintas kedalaman — jadi tiap sesi terasa beda
+ * dan sesi pendek pun tetap kebagian pertanyaan sedang/dalam. Bias lawan
+ * kepribadian ditaruh belakang.
  * Untuk room pasangan berdua, kartu flag disisipkan tiap FLAG_CADENCE kartu
  * dan sisanya jadi flagReserve untuk mode flag murni.
  * Murni — dipakai di API route (server) dan di unit test.
@@ -45,19 +51,24 @@ export function buildDeck(
 ): BuiltDeck {
   const wantGroup = setup.participantCount > 2
   const avoid = deprioritizedBias(setup)
-  const classic = DEPTH_ORDER.flatMap((depth) => {
-    const pool = shuffle(
-      bank.filter(
-        (q) =>
-          q.type === 'question' &&
-          q.category === setup.category &&
-          q.depth === depth &&
-          Boolean(q.forGroup) === wantGroup,
-      ),
-    )
-    if (!avoid) return pool
-    return [...pool.filter((q) => q.bias !== avoid), ...pool.filter((q) => q.bias === avoid)]
-  })
+
+  const inScope = bank.filter(
+    (q) =>
+      q.type === 'question' &&
+      q.category === setup.category &&
+      Boolean(q.forGroup) === wantGroup,
+  )
+
+  // Bias lawan kepribadian tetap ditaruh belakang, sekarang di level deck.
+  const demote = (pool: Question[]) =>
+    avoid ? [...pool.filter((q) => q.bias !== avoid), ...pool.filter((q) => q.bias === avoid)] : pool
+
+  const ringan = demote(shuffle(inScope.filter((q) => q.depth === 'ringan')))
+  const warmup = ringan.slice(0, WARMUP_CARDS)
+  const warmupIds = new Set(warmup.map((q) => q.id))
+  const rest = demote(shuffle(inScope.filter((q) => !warmupIds.has(q.id))))
+
+  const classic = [...warmup, ...rest]
 
   if (!allowsFlagCards(setup)) return { deck: classic, flagReserve: [] }
 

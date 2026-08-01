@@ -44,6 +44,7 @@ import {
   isAccountActive,
   resolveActiveRoleName,
   resolveCurrentPlanName,
+  resolveEffectivePlan,
   type UserStatus,
 } from './status'
 
@@ -122,12 +123,30 @@ async function getActiveRoleRows(client: SelectClient, userId: string) {
     .where(and(eq(userRoles.user_id, userId), isNull(roles.deleted_at)))
 }
 
+/**
+ * Pro yang masa berlakunya lewat harus langsung turun ke free, tanpa nunggu
+ * cron harian — kalau cron gagal jalan, user bisa Pro selamanya. Hanya berlaku
+ * buat user yang memang pernah berlangganan; Pro hasil grant admin tidak punya
+ * baris subscription dan tidak boleh ikut diturunkan.
+ */
+async function hasLapsedSubscription(client: SelectClient, userId: string): Promise<boolean> {
+  const rows = await client
+    .select({ ends_at: subscriptions.ends_at, status: subscriptions.status })
+    .from(subscriptions)
+    .where(eq(subscriptions.user_id, userId))
+  if (rows.length === 0) return false
+  return !rows.some(
+    (row) => row.status === 'active' && new Date(row.ends_at).getTime() > Date.now(),
+  )
+}
+
 async function getProfileView(client: SelectClient, userId: string): Promise<ProfileRow | null> {
   const [profile] = await client.select().from(users).where(eq(users.id, userId)).limit(1)
   if (!profile) return null
-  const [planRows, roleRows] = await Promise.all([
+  const [planRows, roleRows, lapsed] = await Promise.all([
     getCurrentPlanRows(client, userId),
     getActiveRoleRows(client, userId),
+    hasLapsedSubscription(client, userId),
   ])
   return {
     id: profile.id,
@@ -135,12 +154,15 @@ async function getProfileView(client: SelectClient, userId: string): Promise<Pro
     email: profile.email,
     avatar_url: profile.avatar_url,
     status: profile.status as UserStatus,
-    plan: resolveCurrentPlanName(planRows as Array<{
-      name: Plan
-      started_at: string
-      ended_at: string | null
-      deleted_at: string | null
-    }>),
+    plan: resolveEffectivePlan(
+      resolveCurrentPlanName(planRows as Array<{
+        name: Plan
+        started_at: string
+        ended_at: string | null
+        deleted_at: string | null
+      }>),
+      lapsed,
+    ),
     role: resolveActiveRoleName(roleRows as Array<{
       name: Role
       created_at: string

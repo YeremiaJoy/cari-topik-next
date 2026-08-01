@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { aggregateQuestionStats, redSharePercent, type RoomStatsSource } from './analytics'
+import {
+  DIVISIVE_MIN_VOTES,
+  aggregateQuestionStats,
+  isDivisive,
+  redSharePercent,
+  type RoomStatsSource,
+} from './analytics'
 
 const room = (over: Partial<RoomStatsSource> = {}): RoomStatsSource => ({
   deck: ['d0', 'd1', 'd2'],
@@ -72,5 +78,27 @@ describe('redSharePercent', () => {
 
   test('null saat belum ada suara sama sekali', () => {
     expect(redSharePercent({ red: 0, green: 0 })).toBeNull()
+  })
+})
+
+describe('isDivisive', () => {
+  test('sebaran seimbang di atas ambang suara dianggap bikin debat', () => {
+    expect(isDivisive({ red: 5, green: 5 })).toBe(true)
+    expect(isDivisive({ red: 4, green: 6 })).toBe(true)
+  })
+
+  test('sebaran berat sebelah berarti kartu mati', () => {
+    expect(isDivisive({ red: 9, green: 1 })).toBe(false)
+    expect(isDivisive({ red: 0, green: 10 })).toBe(false)
+  })
+
+  test('suara terlalu sedikit belum bisa disimpulkan', () => {
+    expect(isDivisive({ red: 2, green: 2 })).toBe(false)
+    expect(isDivisive({ red: 0, green: 0 })).toBe(false)
+  })
+
+  test('tepat di ambang suara sudah dihitung', () => {
+    const half = DIVISIVE_MIN_VOTES / 2
+    expect(isDivisive({ red: half, green: half })).toBe(true)
   })
 })

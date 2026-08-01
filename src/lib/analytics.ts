@@ -1,4 +1,4 @@
-import type { FlagVote } from '../services/types'
+import type { FlagVote, QuestionStat } from '../services/types'
 import { seenQuestionIds, type PlayedCards } from './session'
 
 /** Satu room, seperlunya untuk menghitung performa kartu. */
@@ -7,16 +7,7 @@ export interface RoomStatsSource extends PlayedCards {
   flagVotes: Record<string, { p1: FlagVote; p2: FlagVote }>
 }
 
-export interface QuestionStat {
-  questionId: string
-  /** Berapa kali kartu ini benar-benar tampil di layar. */
-  played: number
-  /** Berapa kali disimpan ke favorit. */
-  favorites: number
-  /** Suara komunitas — hanya terisi untuk kartu flag. */
-  red: number
-  green: number
-}
+export type { QuestionStat }
 
 function blank(questionId: string): QuestionStat {
   return { questionId, played: 0, favorites: 0, red: 0, green: 0 }
@@ -63,4 +54,19 @@ export function redSharePercent(stat: Pick<QuestionStat, 'red' | 'green'>): numb
   const total = stat.red + stat.green
   if (total === 0) return null
   return Math.round((stat.red / total) * 100)
+}
+
+/** Di bawah sekian suara, sebaran apa pun masih kebetulan. */
+export const DIVISIVE_MIN_VOTES = 6
+
+/**
+ * Kartu flag yang benar-benar membelah ruangan — persis tugasnya. Sebaran
+ * yang berat sebelah artinya semua orang sepakat, dan kartu yang disepakati
+ * semua orang itu kartu mati: tidak ada yang bisa diperdebatkan.
+ */
+export function isDivisive(stat: Pick<QuestionStat, 'red' | 'green'>): boolean {
+  const total = stat.red + stat.green
+  if (total < DIVISIVE_MIN_VOTES) return false
+  const share = (stat.red / total) * 100
+  return share >= 35 && share <= 65
 }

@@ -1,6 +1,7 @@
 import { and, count, desc, eq, isNull, lt, sql } from 'drizzle-orm'
 import { buildDeck } from '@/lib/deck'
 import { advancePools, seenQuestionIds } from '@/lib/session'
+import { aggregateQuestionStats, type QuestionStat } from '@/lib/analytics'
 import {
   DEFAULT_APP_CONFIG,
   QUESTION_RESET_MS,
@@ -130,24 +131,30 @@ async function getActiveRoleRows(client: SelectClient, userId: string) {
  * buat user yang memang pernah berlangganan; Pro hasil grant admin tidak punya
  * baris subscription dan tidak boleh ikut diturunkan.
  */
-async function hasLapsedSubscription(client: SelectClient, userId: string): Promise<boolean> {
+async function readSubscriptionWindow(
+  client: SelectClient,
+  userId: string,
+): Promise<{ lapsed: boolean; endsAt: string | null }> {
   const rows = await client
     .select({ ends_at: subscriptions.ends_at, status: subscriptions.status })
     .from(subscriptions)
     .where(eq(subscriptions.user_id, userId))
-  if (rows.length === 0) return false
-  return !rows.some(
-    (row) => row.status === 'active' && new Date(row.ends_at).getTime() > Date.now(),
-  )
+  if (rows.length === 0) return { lapsed: false, endsAt: null }
+
+  const live = rows
+    .filter((row) => row.status === 'active' && new Date(row.ends_at).getTime() > Date.now())
+    .sort((a, b) => new Date(b.ends_at).getTime() - new Date(a.ends_at).getTime())
+
+  return { lapsed: live.length === 0, endsAt: live[0]?.ends_at ?? null }
 }
 
 async function getProfileView(client: SelectClient, userId: string): Promise<ProfileRow | null> {
   const [profile] = await client.select().from(users).where(eq(users.id, userId)).limit(1)
   if (!profile) return null
-  const [planRows, roleRows, lapsed] = await Promise.all([
+  const [planRows, roleRows, subscription] = await Promise.all([
     getCurrentPlanRows(client, userId),
     getActiveRoleRows(client, userId),
-    hasLapsedSubscription(client, userId),
+    readSubscriptionWindow(client, userId),
   ])
   return {
     id: profile.id,
@@ -162,7 +169,7 @@ async function getProfileView(client: SelectClient, userId: string): Promise<Pro
         ended_at: string | null
         deleted_at: string | null
       }>),
-      lapsed,
+      subscription.lapsed,
     ),
     role: resolveActiveRoleName(roleRows as Array<{
       name: Role
@@ -170,6 +177,7 @@ async function getProfileView(client: SelectClient, userId: string): Promise<Pro
       deleted_at: string | null
     }>),
     created_at: profile.created_at,
+    pro_ends_at: subscription.endsAt,
   }
 }
 
@@ -1026,4 +1034,24 @@ export async function setFlagVotes(
     },
     { isolationLevel: 'serializable' },
   )
+}
+
+/**
+ * Performa tiap kartu: berapa kali tampil, berapa kali difavoritkan, dan —
+ * untuk kartu flag — bagaimana suara komunitas terbelah. Basis panel admin
+ * buat memangkas kartu yang mati dan menulis lebih banyak yang hidup.
+ */
+export async function listQuestionStats(): Promise<QuestionStat[]> {
+  const roomRows = await getDb()
+    .select({
+      deck: rooms.deck,
+      currentIndex: rooms.current_index,
+      flagReserve: rooms.flag_reserve,
+      flagIndex: rooms.flag_index,
+      currentPool: rooms.current_pool,
+      favorites: rooms.favorites,
+      flagVotes: rooms.flag_votes,
+    })
+    .from(rooms)
+  return aggregateQuestionStats(roomRows)
 }

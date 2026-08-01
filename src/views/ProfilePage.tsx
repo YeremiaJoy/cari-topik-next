@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext'
 import { appConfig, paymentService } from '../services'
 import { formatRupiah } from '../services/types'
 import { useLang, localeTag } from '../i18n/useLang'
+import { daysUntil, isRenewalDue } from '../lib/countdown'
 
 const POLL_INTERVAL_MS = 1500
 const POLL_MAX_ATTEMPTS = 20
@@ -88,6 +89,7 @@ export default function ProfilePage() {
   }
 
   const isPro = user.plan === 'pro'
+  const proDaysLeft = daysUntil(user.proEndsAt)
 
   return (
     <motion.div
@@ -164,6 +166,26 @@ export default function ProfilePage() {
             ? t('profile.planProDesc', { price: formatRupiah(appConfig.get().proPriceAfterDiscount) })
             : t('profile.planFreeDesc')}
         </p>
+        {/* Masa berlaku Pro. Tanpa ini user tidak pernah tahu kapan
+            langganannya habis, dan tahu-tahu sudah turun ke free. */}
+        {isPro && proDaysLeft !== null && (
+          <p className="mt-3 text-sm font-bold text-white">
+            {t('profile.planProUntil', {
+              date: formatTanggal(user.proEndsAt!, localeTag(lang)),
+              count: proDaysLeft,
+            })}
+          </p>
+        )}
+
+        {isPro && isRenewalDue(user.proEndsAt) && (
+          <Link
+            href="/pricing"
+            className="btn-tactile mt-5 inline-block rounded-full bg-white px-6 py-2.5 font-bold text-terracotta-600 hover:bg-cream-100"
+          >
+            {t('profile.renew')}
+          </Link>
+        )}
+
         {!isPro && (
           <Link
             href="/pricing"

@@ -3,7 +3,15 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { adminService } from '../../services'
-import type { Bias, Category, Depth, Question, QuestionType } from '../../services/types'
+import { isDivisive, redSharePercent } from '../../lib/analytics'
+import type {
+  Bias,
+  Category,
+  Depth,
+  Question,
+  QuestionStat,
+  QuestionType,
+} from '../../services/types'
 
 const CATEGORIES: Category[] = ['pasangan', 'teman', 'keluarga']
 const DEPTHS: Depth[] = ['ringan', 'sedang', 'dalam']
@@ -41,10 +49,19 @@ export default function AdminQuestionsPage() {
   const [busy, setBusy] = useState(false)
   const [filter, setFilter] = useState<Category | 'all'>('all')
   const [typeFilter, setTypeFilter] = useState<QuestionType | 'all'>('all')
+  const [stats, setStats] = useState<Map<string, QuestionStat>>(new Map())
 
   useEffect(() => {
     adminService.listQuestions().then(setQuestions)
+    // Statistik boleh menyusul — daftar kartu tidak perlu menunggunya.
+    adminService
+      .listQuestionStats()
+      .then((rows) => setStats(new Map(rows.map((r) => [r.questionId, r]))))
+      .catch(() => setStats(new Map()))
   }, [])
+
+  const statFor = (id: string): QuestionStat =>
+    stats.get(id) ?? { questionId: id, played: 0, favorites: 0, red: 0, green: 0 }
 
   const refresh = async () => setQuestions(await adminService.listQuestions())
 
@@ -312,11 +329,57 @@ export default function AdminQuestionsPage() {
                 <span className="rounded-full bg-cream-100 px-2 py-0.5 text-cocoa-700">
                   {t(`depth.${q.depth}`)}
                 </span>
+                {q.type === 'flag' && (
+                  <span className="rounded-full bg-flag-red-soft px-2 py-0.5 text-flag-red">
+                    {t('admin.questions.typeFlag')}
+                  </span>
+                )}
                 {q.forGroup && (
                   <span className="rounded-full bg-butter-100 px-2 py-0.5 text-cocoa-700">
                     {t('common.modeGroup')}
                   </span>
                 )}
+              </div>
+
+              {/* Performa kartu — dasar buat memangkas yang mati dan menulis
+                  lebih banyak yang hidup. */}
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-cocoa-500">
+                <span className="tabular-nums">
+                  {t('admin.questions.played', { count: statFor(q.id).played })}
+                </span>
+                <span className="tabular-nums">
+                  {t('admin.questions.favorited', { count: statFor(q.id).favorites })}
+                </span>
+                {q.type === 'question' && statFor(q.id).played > 0 && (
+                  <span className="tabular-nums font-bold text-cocoa-700">
+                    {t('admin.questions.keepRate', {
+                      percent: Math.round(
+                        (statFor(q.id).favorites / statFor(q.id).played) * 100,
+                      ),
+                    })}
+                  </span>
+                )}
+                {q.type === 'flag' &&
+                  (redSharePercent(statFor(q.id)) === null ? (
+                    <span>{t('admin.questions.noVotes')}</span>
+                  ) : (
+                    <span className="font-bold">
+                      <span className="text-flag-red">
+                        {t('flag.crowdRed', { percent: redSharePercent(statFor(q.id)) })}
+                      </span>
+                      <span className="mx-1 text-cocoa-500">·</span>
+                      <span className="text-flag-green-deep">
+                        {t('flag.crowdGreen', {
+                          percent: 100 - (redSharePercent(statFor(q.id)) ?? 0),
+                        })}
+                      </span>
+                      {isDivisive(statFor(q.id)) && (
+                        <span className="ml-2 rounded-full bg-butter-100 px-2 py-0.5 text-cocoa-700">
+                          {t('admin.questions.divisive')}
+                        </span>
+                      )}
+                    </span>
+                  ))}
               </div>
             </div>
             <div className="flex shrink-0 gap-1">

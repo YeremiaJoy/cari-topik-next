@@ -5,6 +5,7 @@ import type {
   Announcement,
   AppConfig,
   Question,
+  QuestionStat,
   User,
 } from '../types'
 import { api } from './client'
@@ -25,6 +26,7 @@ export function createHttpAdminService(
       await api<void>(`/api/admin/users/${id}`, { method: 'DELETE' })
     },
     listQuestions: () => api<Question[]>('/api/admin/questions'),
+    listQuestionStats: () => api<QuestionStat[]>('/api/admin/questions/stats'),
     async createQuestion(input) {
       const created = await api<Question>('/api/admin/questions', {
         method: 'POST',

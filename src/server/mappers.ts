@@ -24,6 +24,8 @@ export interface ProfileRow {
   role: Role
   status?: UserStatus
   created_at: string
+  /** Kapan periode Pro yang sedang berjalan habis; null untuk free. */
+  pro_ends_at?: string | null
 }
 
 export interface RoomRow {
@@ -93,6 +95,7 @@ export function toUser(row: ProfileRow): User {
     plan: row.plan,
     role: row.role,
     createdAt: row.created_at,
+    proEndsAt: row.pro_ends_at ?? undefined,
   }
 }
 

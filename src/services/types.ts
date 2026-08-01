@@ -34,6 +34,8 @@ export interface User {
   plan: Plan
   role: Role
   createdAt: string
+  /** Kapan periode Pro yang sedang berjalan habis (ISO); undefined untuk free. */
+  proEndsAt?: string
 }
 
 export interface RoomSetup {
@@ -145,6 +147,15 @@ export interface AdminAnalytics {
   questionsByCategory: Array<{ category: Category; counts: Record<Depth, number> }>
 }
 
+/** Performa satu kartu, dihitung dari seluruh room. */
+export interface QuestionStat {
+  questionId: string
+  played: number
+  favorites: number
+  red: number
+  green: number
+}
+
 export interface AdminService {
   getStats(): Promise<AdminStats>
   getAnalytics(): Promise<AdminAnalytics>
@@ -152,6 +163,7 @@ export interface AdminService {
   setUserPlan(id: string, plan: Plan): Promise<User>
   deleteUser(id: string): Promise<void>
   listQuestions(): Promise<Question[]>
+  listQuestionStats(): Promise<QuestionStat[]>
   createQuestion(input: Omit<Question, 'id'>): Promise<Question>
   updateQuestion(id: string, patch: Partial<Omit<Question, 'id'>>): Promise<Question>
   deleteQuestion(id: string): Promise<void>

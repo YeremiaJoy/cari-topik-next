@@ -14,7 +14,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import type { Personality } from "@/services/types";
+import type { FlagVote, Personality } from "@/services/types";
 
 export const userStatusEnum = pgEnum("user_status", [
   "ACTIVE",
@@ -36,6 +36,7 @@ export const questionBiasEnum = pgEnum("question_bias", [
 ]);
 export const questionTypeEnum = pgEnum("question_type", ["question", "flag"]);
 export const roomStatusEnum = pgEnum("room_status", ["active", "completed"]);
+export const roomPoolEnum = pgEnum("room_pool", ["deck", "flag"]);
 export const transactionStatusEnum = pgEnum("transaction_status", [
   "pending",
   "completed",
@@ -234,6 +235,17 @@ export const rooms = pgTable(
       .array()
       .notNull()
       .default(sql`ARRAY[]::uuid[]`),
+    flag_mode: boolean("flag_mode").notNull().default(false),
+    flag_reserve: uuid("flag_reserve")
+      .array()
+      .notNull()
+      .default(sql`ARRAY[]::uuid[]`),
+    flag_index: integer("flag_index").notNull().default(0),
+    current_pool: roomPoolEnum("current_pool").notNull().default("deck"),
+    flag_votes: jsonb("flag_votes")
+      .$type<Record<string, { p1: FlagVote; p2: FlagVote }>>()
+      .notNull()
+      .default({}),
     status: roomStatusEnum("status").notNull().default("active"),
     window_start: integer("window_start"),
     exhausted_at: timestamp("exhausted_at", {

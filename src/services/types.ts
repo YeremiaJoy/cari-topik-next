@@ -49,6 +49,13 @@ export interface Room {
   windowStart?: number
   /** Kapan kartu terakhir jendela kuota dimainkan; kuota reset 6 jam setelahnya. */
   exhaustedAt?: string
+  /** Mode flag murni sedang aktif; berlaku mulai kartu berikutnya. */
+  flagMode: boolean
+  /** Kartu flag cadangan untuk mode flag murni, di luar `deck`. */
+  flagReserve: string[]
+  flagIndex: number
+  currentPool: 'deck' | 'flag'
+  flagVotes: Record<string, { p1: FlagVote; p2: FlagVote }>
 }
 
 export type Localized = { id: string; en: string }

@@ -1,5 +1,6 @@
 import { and, count, desc, eq, isNull, lt, sql } from 'drizzle-orm'
 import { buildDeck } from '@/lib/deck'
+import { advancePools } from '@/lib/session'
 import {
   DEFAULT_APP_CONFIG,
   QUESTION_RESET_MS,
@@ -215,6 +216,11 @@ async function getRoomRow(client: SelectClient, userId: string, roomId: string):
       exhausted_at: rooms.exhausted_at,
       created_at: rooms.created_at,
       ended_at: rooms.ended_at,
+      flag_mode: rooms.flag_mode,
+      flag_reserve: rooms.flag_reserve,
+      flag_index: rooms.flag_index,
+      current_pool: rooms.current_pool,
+      flag_votes: rooms.flag_votes,
     })
     .from(rooms)
     .innerJoin(questionCategories, eq(rooms.category_id, questionCategories.id))
@@ -485,6 +491,11 @@ export async function listRoomsForUser(userId: string): Promise<RoomRow[]> {
       exhausted_at: rooms.exhausted_at,
       created_at: rooms.created_at,
       ended_at: rooms.ended_at,
+      flag_mode: rooms.flag_mode,
+      flag_reserve: rooms.flag_reserve,
+      flag_index: rooms.flag_index,
+      current_pool: rooms.current_pool,
+      flag_votes: rooms.flag_votes,
     })
     .from(rooms)
     .innerJoin(questionCategories, eq(rooms.category_id, questionCategories.id))
@@ -540,6 +551,7 @@ export async function createRoomForUser(
           category_id: category.id,
           personalities: setup.personalities ?? null,
           deck,
+          flag_reserve: flagReserve,
           window_start: 0,
         })
         .returning({ id: rooms.id })
@@ -566,10 +578,18 @@ export async function advanceRoomCard(user: User, roomId: string): Promise<RoomR
         .limit(1)
       if (!room) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
 
-      const nextIndex = room.current_index + 1
+      const outcome = advancePools({
+        deckLength: room.deck.length,
+        reserveLength: room.flag_reserve.length,
+        currentIndex: room.current_index,
+        flagIndex: room.flag_index,
+        currentPool: room.current_pool,
+        flagMode: room.flag_mode,
+      })
       const now = new Date()
       const nowIso = now.toISOString()
-      if (nextIndex >= room.deck.length) {
+
+      if (outcome.completed) {
         await tx
           .update(rooms)
           .set({ status: 'completed', ended_at: nowIso })
@@ -579,8 +599,15 @@ export async function advanceRoomCard(user: User, roomId: string): Promise<RoomR
         return updated
       }
 
+      const cursors = {
+        current_index: outcome.currentIndex,
+        flag_index: outcome.flagIndex,
+        current_pool: outcome.currentPool,
+        flag_mode: outcome.flagMode,
+      }
+
       if (user.plan !== 'free') {
-        await tx.update(rooms).set({ current_index: nextIndex }).where(eq(rooms.id, roomId))
+        await tx.update(rooms).set(cursors).where(eq(rooms.id, roomId))
         const updated = await getRoomRow(tx, user.id, roomId)
         if (!updated) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')
         return updated
@@ -590,28 +617,25 @@ export async function advanceRoomCard(user: User, roomId: string): Promise<RoomR
       let windowStart = room.window_start ?? 0
       let exhaustedAt = room.exhausted_at
 
-      if (nextIndex - windowStart >= cfg.freeMaxQuestions) {
+      // Kuota menghitung kartu dari kedua kolam, bukan indeks deck saja.
+      if (outcome.played - windowStart >= cfg.freeMaxQuestions) {
         const resetAt = exhaustedAt
           ? new Date(new Date(exhaustedAt).getTime() + QUESTION_RESET_MS)
           : now
         if (now.getTime() < resetAt.getTime()) {
           throw new HttpError(402, 'paywall:questions', 'Kuota kartu habis.', resetAt.toISOString())
         }
-        windowStart = nextIndex
+        windowStart = outcome.played
         exhaustedAt = null
       }
 
-      if (nextIndex - windowStart === cfg.freeMaxQuestions - 1) {
+      if (outcome.played - windowStart === cfg.freeMaxQuestions - 1) {
         exhaustedAt = nowIso
       }
 
       await tx
         .update(rooms)
-        .set({
-          current_index: nextIndex,
-          window_start: windowStart,
-          exhausted_at: exhaustedAt,
-        })
+        .set({ ...cursors, window_start: windowStart, exhausted_at: exhaustedAt })
         .where(eq(rooms.id, roomId))
       const updated = await getRoomRow(tx, user.id, roomId)
       if (!updated) throw new HttpError(404, 'room_not_found', 'Room tidak ditemukan.')

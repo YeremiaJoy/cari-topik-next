@@ -4,6 +4,7 @@ import type {
   Bias,
   Category,
   Depth,
+  FlagVote,
   Personality,
   Plan,
   Question,
@@ -39,6 +40,11 @@ export interface RoomRow {
   exhausted_at: string | null
   created_at: string
   ended_at: string | null
+  flag_mode: boolean
+  flag_reserve: string[]
+  flag_index: number
+  current_pool: 'deck' | 'flag'
+  flag_votes: Record<string, { p1: FlagVote; p2: FlagVote }>
 }
 
 export interface QuestionRow {
@@ -106,6 +112,11 @@ export function toRoom(row: RoomRow): Room {
     endedAt: row.ended_at ?? undefined,
     windowStart: row.window_start ?? undefined,
     exhaustedAt: row.exhausted_at ?? undefined,
+    flagMode: row.flag_mode,
+    flagReserve: row.flag_reserve,
+    flagIndex: row.flag_index,
+    currentPool: row.current_pool,
+    flagVotes: row.flag_votes,
   }
 }
 

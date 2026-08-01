@@ -14,10 +14,20 @@ export async function PATCH(request: Request, { params }: Params) {
       row.text_id = patch.text.id
       row.text_en = patch.text.en
     }
-    if (patch.category !== undefined) row.category = patch.category
-    if (patch.depth !== undefined) row.depth = patch.depth
-    if (patch.bias !== undefined) row.bias = patch.bias
-    if (patch.forGroup !== undefined) row.for_group = Boolean(patch.forGroup)
+    if (patch.type === 'flag') {
+      // Kartu flag selalu pasangan/ringan/netral — abaikan field lain dari klien.
+      row.type = 'flag'
+      row.category = 'pasangan'
+      row.depth = 'ringan'
+      row.bias = 'netral'
+      row.for_group = false
+    } else {
+      if (patch.type === 'question') row.type = 'question'
+      if (patch.category !== undefined) row.category = patch.category
+      if (patch.depth !== undefined) row.depth = patch.depth
+      if (patch.bias !== undefined) row.bias = patch.bias
+      if (patch.forGroup !== undefined) row.for_group = Boolean(patch.forGroup)
+    }
     return NextResponse.json(toQuestion(await updateQuestionRow(id, row)))
   })
 }

@@ -12,6 +12,7 @@ import {
   type FlagVote,
   type Personality,
   type Plan,
+  type QuestionType,
   type Role,
   type User,
 } from '@/services/types'
@@ -428,6 +429,7 @@ export async function createQuestionRow(input: {
   depth: Depth
   bias: Bias
   for_group: boolean
+  type: QuestionType
 }): Promise<QuestionRow> {
   const category = await getCategoryByName(getDb(), input.category)
   const [row] = await getDb()
@@ -440,6 +442,7 @@ export async function createQuestionRow(input: {
       depth: input.depth,
       bias: input.bias,
       for_group: input.for_group,
+      type: input.type,
     })
     .returning({ id: questions.id })
   const [created] = (await getQuestionRows(getDb())).filter((q) => q.id === row.id)
@@ -457,6 +460,7 @@ export async function updateQuestionRow(
   if (patch.depth !== undefined) row.depth = patch.depth
   if (patch.bias !== undefined) row.bias = patch.bias
   if (patch.for_group !== undefined) row.for_group = patch.for_group
+  if (patch.type !== undefined) row.type = patch.type
   if (patch.category !== undefined) {
     row.category_id = (await getCategoryByName(getDb(), patch.category)).id
   }

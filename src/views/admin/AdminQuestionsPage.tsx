@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { adminService } from '../../services'
-import type { Bias, Category, Depth, Question } from '../../services/types'
+import type { Bias, Category, Depth, Question, QuestionType } from '../../services/types'
 
 const CATEGORIES: Category[] = ['pasangan', 'teman', 'keluarga']
 const DEPTHS: Depth[] = ['ringan', 'sedang', 'dalam']
@@ -16,6 +16,7 @@ interface FormState {
   depth: Depth
   bias: Bias
   forGroup: boolean
+  type: QuestionType
 }
 
 const EMPTY_FORM: FormState = {
@@ -25,6 +26,7 @@ const EMPTY_FORM: FormState = {
   depth: 'ringan',
   bias: 'netral',
   forGroup: false,
+  type: 'question',
 }
 
 const fieldClass =
@@ -38,6 +40,7 @@ export default function AdminQuestionsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [busy, setBusy] = useState(false)
   const [filter, setFilter] = useState<Category | 'all'>('all')
+  const [typeFilter, setTypeFilter] = useState<QuestionType | 'all'>('all')
 
   useEffect(() => {
     adminService.listQuestions().then(setQuestions)
@@ -58,6 +61,7 @@ export default function AdminQuestionsPage() {
       depth: q.depth,
       bias: q.bias,
       forGroup: Boolean(q.forGroup),
+      type: q.type,
     })
     setEditingId(q.id)
   }
@@ -68,14 +72,17 @@ export default function AdminQuestionsPage() {
     try {
       const input = {
         text: { id: form.textId.trim(), en: form.textEn.trim() },
-        category: form.category,
-        depth: form.depth,
-        bias: form.bias,
-        // Kartu flag punya form editor sendiri (lihat task berikutnya); form ini selalu bikin tipe 'question'.
-        type: 'question' as const,
-        forGroup: form.forGroup || undefined,
+        type: form.type,
+        ...(form.type === 'question'
+          ? {
+              category: form.category,
+              depth: form.depth,
+              bias: form.bias,
+              forGroup: form.forGroup || undefined,
+            }
+          : {}),
       }
-      if (editingId === 'new') await adminService.createQuestion(input)
+      if (editingId === 'new') await adminService.createQuestion(input as Omit<Question, 'id'>)
       else if (editingId) await adminService.updateQuestion(editingId, input)
       await refresh()
       setEditingId(null)
@@ -97,7 +104,11 @@ export default function AdminQuestionsPage() {
 
   if (!questions) return <p className="text-sm text-cocoa-500">{t('common.loading')}</p>
 
-  const visible = filter === 'all' ? questions : questions.filter((q) => q.category === filter)
+  const visible = questions.filter(
+    (q) =>
+      (filter === 'all' || q.category === filter) &&
+      (typeFilter === 'all' || q.type === typeFilter),
+  )
 
   return (
     <div className="space-y-4">
@@ -114,6 +125,27 @@ export default function AdminQuestionsPage() {
               }`}
             >
               {c === 'all' ? t('admin.questions.all') : t(`category.${c}.label`)}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          {(['all', 'question', 'flag'] as const).map((ty) => (
+            <button
+              key={ty}
+              onClick={() => setTypeFilter(ty)}
+              className={`press rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
+                typeFilter === ty
+                  ? 'bg-cocoa-900 text-cream-50'
+                  : 'border border-cream-200 bg-white/60 text-cocoa-700 hover:bg-cream-100'
+              }`}
+            >
+              {t(
+                ty === 'all'
+                  ? 'admin.questions.typeAll'
+                  : ty === 'flag'
+                    ? 'admin.questions.typeFlag'
+                    : 'admin.questions.typeQuestion',
+              )}
             </button>
           ))}
         </div>
@@ -159,66 +191,84 @@ export default function AdminQuestionsPage() {
                 className={fieldClass}
               />
             </div>
-            <div>
-              <label className={labelClass} htmlFor="q-category">
-                {t('admin.questions.category')}
+            <div className="sm:col-span-2">
+              <label className={labelClass} htmlFor="q-type">
+                {t('admin.questions.type')}
               </label>
               <select
-                id="q-category"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value as Category })}
+                id="q-type"
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value as QuestionType })}
                 className={fieldClass}
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {t(`category.${c}.label`)}
-                  </option>
-                ))}
+                <option value="question">{t('admin.questions.typeQuestion')}</option>
+                <option value="flag">{t('admin.questions.typeFlag')}</option>
               </select>
             </div>
-            <div>
-              <label className={labelClass} htmlFor="q-depth">
-                {t('admin.questions.depth')}
-              </label>
-              <select
-                id="q-depth"
-                value={form.depth}
-                onChange={(e) => setForm({ ...form, depth: e.target.value as Depth })}
-                className={fieldClass}
-              >
-                {DEPTHS.map((d) => (
-                  <option key={d} value={d}>
-                    {t(`depth.${d}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass} htmlFor="q-bias">
-                {t('admin.questions.bias')}
-              </label>
-              <select
-                id="q-bias"
-                value={form.bias}
-                onChange={(e) => setForm({ ...form, bias: e.target.value as Bias })}
-                className={fieldClass}
-              >
-                {BIASES.map((b) => (
-                  <option key={b} value={b}>
-                    {b === 'netral' ? t('admin.bias.netral') : t(`personality.${b}.label`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <label className="flex items-center gap-2 self-end pb-2 text-sm font-medium text-cocoa-700">
-              <input
-                type="checkbox"
-                checked={form.forGroup}
-                onChange={(e) => setForm({ ...form, forGroup: e.target.checked })}
-                className="h-4 w-4 accent-terracotta-500"
-              />
-              {t('admin.questions.forGroup')}
-            </label>
+            {form.type === 'question' && (
+              <>
+                <div>
+                  <label className={labelClass} htmlFor="q-category">
+                    {t('admin.questions.category')}
+                  </label>
+                  <select
+                    id="q-category"
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value as Category })}
+                    className={fieldClass}
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {t(`category.${c}.label`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass} htmlFor="q-depth">
+                    {t('admin.questions.depth')}
+                  </label>
+                  <select
+                    id="q-depth"
+                    value={form.depth}
+                    onChange={(e) => setForm({ ...form, depth: e.target.value as Depth })}
+                    className={fieldClass}
+                  >
+                    {DEPTHS.map((d) => (
+                      <option key={d} value={d}>
+                        {t(`depth.${d}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass} htmlFor="q-bias">
+                    {t('admin.questions.bias')}
+                  </label>
+                  <select
+                    id="q-bias"
+                    value={form.bias}
+                    onChange={(e) => setForm({ ...form, bias: e.target.value as Bias })}
+                    className={fieldClass}
+                  >
+                    {BIASES.map((b) => (
+                      <option key={b} value={b}>
+                        {b === 'netral' ? t('admin.bias.netral') : t(`personality.${b}.label`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <label className="flex items-center gap-2 self-end pb-2 text-sm font-medium text-cocoa-700">
+                  <input
+                    type="checkbox"
+                    checked={form.forGroup}
+                    onChange={(e) => setForm({ ...form, forGroup: e.target.checked })}
+                    className="h-4 w-4 accent-terracotta-500"
+                  />
+                  {t('admin.questions.forGroup')}
+                </label>
+              </>
+            )}
           </div>
           <div className="mt-5 flex gap-2">
             <button
